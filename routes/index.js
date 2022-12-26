@@ -276,6 +276,9 @@ async function getLinks() {
 }
 
 YD.on("finished", async function (err, data) {
+
+    await new Promise(r => setTimeout(r, 500)); // random delay om aborted errors te proberen vermijden
+
     let el = songs[data.videoId]
     let description = el.snippet.description.split(/\r?\n/);
     let info = description[2].split(" · ")
