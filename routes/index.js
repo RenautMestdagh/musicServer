@@ -19,14 +19,14 @@ if (process.env.NODE_ENV === "production"){
     ffmpegPath = "/usr/bin/ffmpeg";
     libPath = "/media/OneDrive"
 } else {
-    ffmpegPath = path.join(__dirname, '..\\ffmpeg.exe');
-    libPath = "C:\\Users\\renau\\OneDrive\\Muziek"
+    ffmpegPath = path.join(__dirname, '../ffmpeg.exe');
+    libPath = "C:/Users/renau/OneDrive/Muziek"
 }
 
 //Configure YoutubeMp3Downloader with your settings
 const YD = new YoutubeMp3Downloader({
     "ffmpegPath": ffmpegPath,        // FFmpeg binary location
-    "outputPath": path.join(__dirname, '..\\tmp\\songs'),    // Output file location (default: the home directory)
+    "outputPath": path.join(__dirname, '../tmp/songs'),    // Output file location (default: the home directory)
     "youtubeVideoQuality": "highestaudio",  // Desired video quality (default: highestaudio)
     "queueParallelism": 50,                  // Download parallelism (default: 1)
     "progressTimeout": 10000,                // Interval in ms for the progress reports (default: 1000)
@@ -83,13 +83,13 @@ router.post('/', function(req, res) {
                 playlistObj.jfID = jfPlId
                 playlistObj.name = el.plS
                 playlistCollection.playlists.push(playlistObj)
-                fs.writeFileSync(path.join(__dirname, '..\\playlists.json'), JSON.stringify(playlistCollection));
+                fs.writeFileSync(path.join(__dirname, '../playlists.json'), JSON.stringify(playlistCollection));
             } else {    // nieuwe yt playlist
                 if(el.nieuw){   // in nieuwe jf playlist
                     // create playlist in JF with name el.plS, get jf playlist id
                     // add entry in JSON (el.ID, el.plS, jf playlist id)
                     playlistCollection.playlists.push({"name": el.plS, "ytID": el.ID, "jfID": jfPlId})
-                    fs.writeFileSync(path.join(__dirname, '..\\playlists.json'), JSON.stringify(playlistCollection));
+                    fs.writeFileSync(path.join(__dirname, '../playlists.json'), JSON.stringify(playlistCollection));
                 } else {    // in bestaande jf playlist
                     playlistObj = jfPlaylistNameToID(el.plS)
                     if(playlistObj){
@@ -102,7 +102,7 @@ router.post('/', function(req, res) {
                         // create playlist in JF with name el.plS, get jf playlist id
                         // add entry in JSON (el.ID, el.plS, jf playlist id)
                         playlistCollection.playlists.push({"name": el.plS, "ytID": el.ID, "jfID": jfPlId})
-                        fs.writeFileSync(path.join(__dirname, '..\\playlists.json'), JSON.stringify(playlistCollection));
+                        fs.writeFileSync(path.join(__dirname, '../playlists.json'), JSON.stringify(playlistCollection));
                     } else
                         console.log("ERROR REGEL 89:  plS:  " + el.plS + "   playlistObject: " + playlistObj)
 
@@ -124,7 +124,7 @@ router.post('/', function(req, res) {
             if (objWithIdIndex > -1)
                 playlistCollection.playlists.splice(objWithIdIndex, 1);
         }
-        fs.writeFileSync(path.join(__dirname, '..\\playlists.json'), JSON.stringify(playlistCollection));
+        fs.writeFileSync(path.join(__dirname, '../playlists.json'), JSON.stringify(playlistCollection));
 
 
         res.send("k")
@@ -187,9 +187,9 @@ async function getLinks() {
 
         for(const value of Object.values(jfPlaylist.data.Items)){
             let ytId = jfToYtId(jfPlaylist.data.Items, value.Id)
-            if(!YTPlaylistContains(ytPlaylists[url], ytId) && fs.existsSync(libPath+"\\"+ytId+".mp3") ) { // and not in library
+            if(!YTPlaylistContains(ytPlaylists[url], ytId) && fs.existsSync(libPath+"/"+ytId+".mp3") ) { // and not in library
                 deleteFromPlaylistQueue[value.Id] = true
-                fs.unlinkSync(libPath+"\\" + ytId + ".mp3");
+                fs.unlinkSync(libPath+"/" + ytId + ".mp3");
             }
         }
         for(const key of Object.keys(deleteFromPlaylistQueue)){
@@ -224,7 +224,7 @@ async function getLinks() {
 
     // download songs which are not in media folder
     for(const key of Object.keys(songs)){
-        if(!fs.existsSync(path.join(__dirname, '..\\tmp\\songs\\'+key+".mp3")) && !fs.existsSync(libPath+"\\"+key+".mp3")){
+        if(!fs.existsSync(path.join(__dirname, '../tmp/songs/'+key+".mp3")) && !fs.existsSync(libPath+"/"+key+".mp3")){
             YD.download(key, key+".mp3")
         }
     }
@@ -256,7 +256,7 @@ async function getLinks() {
     // in library maar niet meer in een playlist (nodig voor geval bestaande jf playlist, nieuwe yt playlist) -> oude yt playlist verwijderen
     for(const el of tmpLib){
         try{
-            fs.unlinkSync(libPath+"\\" + jfToYtId(tmpLib,el.Id) + ".mp3");
+            fs.unlinkSync(libPath+"/" + jfToYtId(tmpLib,el.Id) + ".mp3");
             deleteFromPlaylistQueue[el.Id] = true
         } catch(e){}
     }
@@ -280,7 +280,7 @@ YD.on("finished", async function (err, data) {
             let imgBuffer = Buffer.from(uri, 'base64');
             await sharp(imgBuffer)
                 .resize(height, height)
-                .toFile(path.join(__dirname, '..\\tmp\\img\\' + data.videoId + ".jpg"))
+                .toFile(path.join(__dirname, '../tmp/img/' + data.videoId + ".jpg"))
                 .catch(err => console.log(`downisze issue ${err}`))
         }).catch(function (error) {
             console.error(error, error.message)
@@ -302,17 +302,17 @@ YD.on("finished", async function (err, data) {
     const tags = {
         title: title,
         artist: artist,
-        APIC: path.join(__dirname, '..\\tmp\\img\\' + data.videoId + ".jpg"),
+        APIC: path.join(__dirname, '../tmp/img/' + data.videoId + ".jpg"),
     }
 
-    await NodeID3.write(tags, path.join(__dirname, '..\\tmp\\songs\\'+data.videoId+".mp3"), function(err) {  })
+    await NodeID3.write(tags, path.join(__dirname, '../tmp/songs/'+data.videoId+".mp3"), function(err) {  })
 
     await new Promise(r => setTimeout(r, 500)); // random delay wnt anders werkt et ni fz
 
-    await fs.rename( path.join(__dirname, '..\\tmp\\songs\\'+data.videoId+".mp3") , libPath+"\\"+data.videoId+".mp3", (err)=>{
+    await fs.rename( path.join(__dirname, '../tmp/songs/'+data.videoId+".mp3") , libPath+"/"+data.videoId+".mp3", (err)=>{
         if(err)throw err;
     });
-    fs.unlinkSync(path.join(__dirname, '..\\tmp\\img\\' + data.videoId + ".jpg"));
+    fs.unlinkSync(path.join(__dirname, '../tmp/img/' + data.videoId + ".jpg"));
 
 });
 
