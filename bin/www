@@ -8,7 +8,7 @@ const debug = require('debug')('project:server');
 
 const httpsServer = require('../app').httpsServer;
 if (process.env.NODE_ENV === "production"){
-  httpsServer.listen('3001');
+  httpsServer.listen('6969');
   httpsServer.on('error', onError);
   httpsServer.on('listening', onListening);
 }
@@ -16,7 +16,7 @@ if (process.env.NODE_ENV === "production"){
 /**
  * Get port from environment and store in Express.
  */
-const port = normalizePort(process.env.PORT || '6969');
+const port = normalizePort(process.env.PORT || '7070');
 app.set('port', port);
 
 /**
