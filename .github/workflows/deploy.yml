@@ -30,4 +30,9 @@ jobs:
         key: ${{secrets.SSH_PRIVATE_KEY}}
         port: 22
         script: |
-          ./updateMusicServer.sh
+          cd musicServer
+          git fetch origin
+          git reset --hard origin/master
+          whoami
+          npm install
+          pm2 restart 0 --update-env
