@@ -269,14 +269,12 @@ async function clearOldTmp() {
     const img = fs.readdirSync(path.join(__dirname, '../tmp/img/'))
 
     for(const file of songs){
-        console.log(fs.statSync(path.join(__dirname, '../tmp/songs/'+file)).birthtimeMs)
-        console.log(Date.now()+600000)
-        if(fs.statSync(path.join(__dirname, '../tmp/songs/'+file)).birthtimeMs > Date.now()+600000)
+        if(fs.statSync(path.join(__dirname, '../tmp/songs/'+file)).birthtimeMs+600000 < Date.now())
             fs.unlinkSync(path.join(path.join(__dirname, '../tmp/songs/'+file)))
     }
 
     for(const file of img){
-        if(fs.statSync(path.join(__dirname, '../tmp/img/'+file)).birthtimeMs > Date.now()+600000)
+        if(fs.statSync(path.join(__dirname, '../tmp/img/'+file)).birthtimeMs+600000 < Date.now())
             fs.unlinkSync(path.join(path.join(__dirname, '../tmp/img/'+file)))
     }
 
