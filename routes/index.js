@@ -11,12 +11,14 @@ let jfPlaylists = {};
 let deleteFromPlaylistQueue = {};   // with jf IDs
 let lib;
 const sharp = require('sharp');
-
+let playlistCollection
 
 while(!fs.existsSync(path.join(__dirname, '..\\playlists.json')))
     fs.writeFileSync(path.join(__dirname, '..\\playlists.json'), "{\"playlists\":[]}")
 
-let playlistCollection = require('../playlists.json');
+try{
+    playlistCollection = require('../playlists.json');
+} catch(e){}
 
 //Configure YoutubeMp3Downloader with your settings
 const YD = new YoutubeMp3Downloader({
