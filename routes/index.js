@@ -133,7 +133,11 @@ router.post('/', function(req, res) {
     verwerk()
 });
 
-getLibrary().then(r => getLinks())   // executed every 5 minutes
+function executeAll(){
+    getLibrary().then(r => clearOldTmp().then(r => getLinks()))
+    setTimeout(executeAll, 600000); // om de 10 minuten alles uitvoeren
+}
+executeAll();
 
 async function getLibrary() {
 
@@ -143,8 +147,19 @@ async function getLibrary() {
         }
     )
     lib = lib.data.Items
+}
 
-    setTimeout(getLibrary, 300000); // om de 5 minuten library scannen
+async function clearOldTmp() {
+    const songs = fs.readdirSync(path.join(__dirname, '../tmp/songs/'))
+    const img = fs.readdirSync(path.join(__dirname, '../tmp/img/'))
+
+    for(const file of songs)
+        if(fs.statSync(path.join(__dirname, '../tmp/songs/'+file)).birthtimeMs+600000 < Date.now())
+            fs.unlinkSync(path.join(__dirname, '../tmp/songs/'+file))
+
+    for(const file of img)
+        if(fs.statSync(path.join(__dirname, '../tmp/img/'+file)).birthtimeMs+600000 < Date.now())
+            fs.unlinkSync(path.join(__dirname, '../tmp/img/'+file))
 }
 
 async function getLinks() {
@@ -260,25 +275,7 @@ async function getLinks() {
             deleteFromPlaylistQueue[el.Id] = true
         } catch(e){}
     }
-
-    setTimeout(getLinks, 300000); // om de 5 minuten library scannen
 }
-
-async function clearOldTmp() {
-    const songs = fs.readdirSync(path.join(__dirname, '../tmp/songs/'))
-    const img = fs.readdirSync(path.join(__dirname, '../tmp/img/'))
-
-    for(const file of songs)
-        if(fs.statSync(path.join(__dirname, '../tmp/songs/'+file)).birthtimeMs+600000 < Date.now())
-            fs.unlinkSync(path.join(__dirname, '../tmp/songs/'+file))
-
-    for(const file of img)
-        if(fs.statSync(path.join(__dirname, '../tmp/img/'+file)).birthtimeMs+600000 < Date.now())
-            fs.unlinkSync(path.join(__dirname, '../tmp/img/'+file))
-
-    setTimeout(clearOldTmp, 600000); // om de 10 minuten files die meer dan 10 min oud zijn clearen
-}
-clearOldTmp();
 
 YD.on("finished", async function (err, data) {
     let el = songs[data.videoId]
