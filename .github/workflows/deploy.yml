@@ -33,6 +33,5 @@ jobs:
           cd musicServer
           git fetch origin
           git reset --hard origin/master
-          whoami
           npm install
-          pm2 restart 0 --update-env
+          runuser -l ubuntu -c 'pm2 restart 0 --update-env'
