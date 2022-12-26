@@ -309,7 +309,7 @@ YD.on("finished", async function (err, data) {
 
     await new Promise(r => setTimeout(r, 500)); // random delay wnt anders werkt et ni fz
 
-    await fs.copyFile( path.join(__dirname, '../tmp/songs/'+data.videoId+".mp3") , libPath+"/"+data.videoId+".mp3", null);
+    fs.copyFileSync( path.join(__dirname, '../tmp/songs/'+data.videoId+".mp3") , libPath+"/"+data.videoId+".mp3");
     fs.unlinkSync( path.join(__dirname, '../tmp/songs/'+data.videoId+".mp3"));
     fs.unlinkSync(path.join(__dirname, '../tmp/img/' + data.videoId + ".jpg"));
 
