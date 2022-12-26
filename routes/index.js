@@ -13,6 +13,14 @@ let lib;
 const sharp = require('sharp');
 let playlistCollection = require('../playlists.json');
 
+let ffmpegPath
+let libPath
+if (process.env.NODE_ENV === "production"){
+
+} else {
+    ffmpegPath =
+}
+
 //Configure YoutubeMp3Downloader with your settings
 const YD = new YoutubeMp3Downloader({
     "ffmpegPath": "C:\\Users\\renau\\Downloads\\ffmpeg-4.4.1-win-64\\ffmpeg.exe",        // FFmpeg binary location
