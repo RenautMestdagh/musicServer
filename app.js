@@ -10,21 +10,21 @@ require('dotenv').config()
 const app = express();
 
 const server = require('http').Server(app);
-let httpsServer
-if (process.env.NODE_ENV === "production"){
-    //Certificate
-    const cert_path='/etc/letsencrypt/live/renautmusic.ml/'
-    const privateKey = fs.readFileSync(cert_path+'privkey.pem', 'utf8');
-    const certificate = fs.readFileSync(cert_path+'cert.pem', 'utf8');
-    const ca = fs.readFileSync(cert_path+'chain.pem', 'utf8');
-
-    const credentials = {
-        key: privateKey,
-        cert: certificate,
-        ca: ca
-    };
-    httpsServer = require('https').createServer(credentials, app);
-}
+// let httpsServer
+// if (process.env.NODE_ENV === "production"){
+//     //Certificate
+//     const cert_path='/etc/letsencrypt/live/renautmusic.ml/'
+//     const privateKey = fs.readFileSync(cert_path+'privkey.pem', 'utf8');
+//     const certificate = fs.readFileSync(cert_path+'cert.pem', 'utf8');
+//     const ca = fs.readFileSync(cert_path+'chain.pem', 'utf8');
+//
+//     const credentials = {
+//         key: privateKey,
+//         cert: certificate,
+//         ca: ca
+//     };
+//     httpsServer = require('https').createServer(credentials, app);
+// }
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -32,17 +32,17 @@ app.set('view engine', 'pug');
 
 // http -> https
 app.enable('trust proxy');
-app.use(function (req, res, next) {
-    if (req.app.get('env') === "production")
-        req.secure ? next() : res.redirect('https://' + req.headers.host + req.url)
-    else
-        next();
-})
+// app.use(function (req, res, next) {
+//     if (req.app.get('env') === "production")
+//         req.secure ? next() : res.redirect('https://' + req.headers.host + req.url)
+//     else
+//         next();
+// })
 
 // www. X
 app.get( '/*', function(req, res, next){
     if (req.headers.host.match(/^www\./))
-        return res.redirect("https://"+req.headers.host.substring(4) + req.url)
+        return res.redirect("http"+/*s*/+"://"+req.headers.host.substring(4) + req.url)
     else
         next()
 })
