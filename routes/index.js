@@ -16,10 +16,10 @@ const sharp = require('sharp');
 let playlistCollection
 
 try{
+    require('../playlists.json')
     playlistCollection = require('../playlists.json');
 }catch (e){
     fs.writeFileSync(path.join(__dirname, '..\\playlists.json'), "{\"playlists\":[]}")
-    playlistCollection = require('../playlists.json');
 }
 
 //Configure YoutubeMp3Downloader with your settings
