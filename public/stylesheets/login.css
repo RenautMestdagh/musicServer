@@ -1,0 +1,82 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700&display=swap');
+
+.container {
+    /* Center child horizontally*/
+    display: flex;
+    justify-content: center;
+}
+.loginchild {
+    position: absolute;
+    top: 45%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 20%;
+}
+input::-ms-reveal, input::-ms-clear {
+    display: none;
+}
+/* Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button, input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+p {
+    font: 18px "Lucida Grande", Helvetica, Arial, sans-serif;
+    color: #3f3f3f;
+    line-height: 150%;
+}
+.passNCorrect {
+    color: red;
+    font-size: small;
+    display: none;
+}
+.login {
+    margin-top: 20px;
+    width: 100%;
+}
+input[type=text], input[type=password], input[type=email], input[type=tel], select, textarea {
+    width: 100%;
+    padding: 0 12px;
+    line-height: 46px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    resize: vertical;
+}
+input[type=submit], button, #teamDisplay input[type=button] {
+    background-color: #940000;
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    float: right;
+    -moz-appearance: none;
+    -webkit-appearance: none;
+}
+
+input[type=submit]:hover, button:hover, #teamDisplay input[type=button]:hover {
+    background-color: #ce0000;
+}
+.field-icon {
+    -moz-appearance: none; -webkit-appearance: none;
+    text-decoration: none;
+    float: right;
+    margin-left: -25px;
+    margin-top: -35px;
+    font-size: 50px;
+    color: rgba(0, 0, 0, 0.5);
+    margin-right: 20px;
+    padding: 3px;
+    position: relative;
+    z-index: 2;
+}
+.field-icon:hover{
+    color: rgba(0, 0, 0, 0.7);
+}
+#eye {
+    font-size: 17px;
+}
+* {
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}

@@ -1,0 +1,16 @@
+extends layout
+
+block content
+
+    link(rel='stylesheet', href='/stylesheets/login.css')
+    link(rel='stylesheet', href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css')
+
+    .container
+        .loginchild
+            form.login-form(id='login' action='/login' method='post')
+                input#password(type='password' name='password' placeholder='Wachtwoord..' required='' maxlength="60" autofocus)
+                .toggle-password.fa.fa-fw.fa-eye.field-icon(id="eye" type='button')
+                p.passNCorrect#passNCorrect Wachtwoord is incorrect.
+                input.submit.login(id= 'submit' type='submit' value='Log in')
+
+    script(type="text/javascript" src="/javascripts/login.js")
