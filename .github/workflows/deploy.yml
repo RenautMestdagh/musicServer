@@ -34,4 +34,4 @@ jobs:
           git fetch origin
           git reset --hard origin/master
           npm install
-          runuser -l ubuntu -c 'pm2 restart 0 --update-env'
+          pm2 restart 0 --update-env
