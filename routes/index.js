@@ -264,7 +264,7 @@ async function getLinks() {
                 (async () => {
                     try {
                         const {data} = await axios.get(Object.values(response.requested_formats)[1].url, {responseType: 'arraybuffer'}).catch(function (error) {
-                            console.log("error at axios get")
+                            console.log(error)
                         });
                         try{
                             fs.writeFileSync(path.join(__dirname, '../tmp/songs/'+ytId+".webm"), data, 'binary');
@@ -280,9 +280,7 @@ async function getLinks() {
                         console.log(err);
                     }
                 })();
-                //console.log(Object.values(response.requested_formats)[1])
             })
-            //YD.download(key, key+".mp3")
         }
     }
 
