@@ -262,6 +262,7 @@ async function getLinks() {
 
                 (async () => {
                     try {
+                        console.log(Object.values(response.requested_formats)[1].url)
                         const {data} = await axios.get(Object.values(response.requested_formats)[1].url, {responseType: 'arraybuffer'});
                         fs.writeFileSync(path.join(__dirname, '../tmp/songs/'+ytId+".webm"), data, 'binary');
                         execSync('ffmpeg -hide_banner -loglevel error -i '+path.join(__dirname, '../tmp/songs/'+ytId+".webm")+' -vn '+path.join(__dirname, '../tmp/songs/'+ytId+".mp3"), { encoding: 'utf-8' });  // the default is 'buffer'
