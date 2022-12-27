@@ -1,37 +1,32 @@
 const express = require('express');
 const router = express.Router();
-const axios = require('axios');
-const YoutubeMp3Downloader = require("youtube-mp3-downloader");
-const NodeID3 = require('node-id3')
 const path = require("path");
 const fs = require("fs");
+const axios = require('axios');
+const youtubedl = require('youtube-dl-exec');
+
+const {execSync} = require("child_process");
+const sharp = require('sharp');
+const ffmetadata = require("ffmetadata");
+
 let songs = {};
 let ytPlaylists = {};
 let jfPlaylists = {};
 let deleteFromPlaylistQueue = {};   // with jf IDs
 let lib;
-const sharp = require('sharp');
+
 let playlistCollection = require('../playlists.json');
 
 let ffmpegPath
 let libPath
 if (process.env.NODE_ENV === "production"){
     ffmpegPath = "/usr/bin/ffmpeg";
-    libPath = "/media/OneDrive"
+    libPath = "/media/OneDrive/"
 } else {
     ffmpegPath = path.join(__dirname, '../ffmpeg.exe');
-    libPath = "C:/Users/renau/OneDrive/Muziek"
+    libPath = "C:/Users/renau/OneDrive/Muziek/"
 }
-
-//Configure YoutubeMp3Downloader with your settings
-const YD = new YoutubeMp3Downloader({
-    "ffmpegPath": ffmpegPath,        // FFmpeg binary location
-    "outputPath": path.join(__dirname, '../tmp/songs'),    // Output file location (default: the home directory)
-    "youtubeVideoQuality": "highestaudio",  // Desired video quality (default: highestaudio)
-    "queueParallelism": 10,                  // Download parallelism (default: 1)
-    "progressTimeout": 10000,                // Interval in ms for the progress reports (default: 1000)
-    "allowWebm": true                      // Enable download from WebM sources (default: false)
-});
+ffmetadata.setFfmpegPath(ffmpegPath)
 
 
 /* GET home page. */
@@ -185,7 +180,8 @@ async function getLinks() {
             })
 
             for(let el2 of response.data.items){
-                songsN[el2.snippet.resourceId.videoId] = el2;
+                songsN[el2.snippet.resourceId.videoId] = {};
+                songsN[el2.snippet.resourceId.videoId].yt1=el2
                 ytPlaylists[url][ytPlaylists[url].length] = el2.snippet.resourceId.videoId;
             }
         }
@@ -200,9 +196,9 @@ async function getLinks() {
 
         for(const value of Object.values(jfPlaylist.data.Items)){
             let ytId = jfToYtId(jfPlaylist.data.Items, value.Id)
-            if(!YTPlaylistContains(ytPlaylists[url], ytId) && fs.existsSync(libPath+"/"+ytId+".mp3") ) { // and not in library
+            if(!YTPlaylistContains(ytPlaylists[url], ytId) && fs.existsSync(libPath+ytId+".mp3") ) { // and not in library
                 deleteFromPlaylistQueue[value.Id] = true
-                fs.unlinkSync(libPath+"/" + ytId + ".mp3");
+                fs.unlinkSync(libPath+ytId + ".mp3");
             }
         }
         for(const key of Object.keys(deleteFromPlaylistQueue)){
@@ -236,9 +232,50 @@ async function getLinks() {
     songs = songsN
 
     // download songs which are not in media folder
-    for(const key of Object.keys(songs)){
-        if(!fs.existsSync(path.join(__dirname, '../tmp/songs/'+key+".mp3")) && !fs.existsSync(libPath+"/"+key+".mp3")){
-            YD.download(key, key+".mp3")
+    const maxAtSameTime = 10
+    let currentAtSameTime = 0
+    for(const ytId of Object.keys(songs)){
+        await new Promise(r => setTimeout(r, 100)); // beetje splitsen want er geraken er 2 uit de loop bij elke -
+        if(!fs.existsSync(path.join(__dirname, '../tmp/songs/'+ytId+".mp3")) && !fs.existsSync(path.join(__dirname, '../tmp/songs/'+ytId+".webm")) && !fs.existsSync(libPath+ytId+".mp3")){
+            while(currentAtSameTime >= maxAtSameTime){
+                await new Promise(r => setTimeout(r, 10000)); // 10 seconden wachten voor opnieuw check
+            }
+            currentAtSameTime ++
+            console.log(currentAtSameTime)
+            youtubedl('https://music.youtube.com/watch?v='+ytId, {
+                dumpSingleJson: true,
+                noCheckCertificates: true,
+                noWarnings: true,
+                preferFreeFormats: true,
+                addHeader: [
+                    'referer:youtube.com',
+                    'user-agent:googlebot'
+                ]
+            }).then( function(response){
+                songs[ytId].thumbnail = response.thumbnail
+                songs[ytId].yt2 = response
+                // if yt song, these are null
+                let tags = ['album','artist','track','release_year']
+                for(const tag of tags)
+                    try{
+                        songs[ytId][tag] = response[tag]
+                    } catch(e){}
+
+                (async () => {
+                    try {
+                        const {data} = await axios.get(Object.values(response.requested_formats)[1].url, {responseType: 'arraybuffer'});
+                        fs.writeFileSync(path.join(__dirname, '../tmp/songs/'+ytId+".webm"), data, 'binary');
+                        execSync('ffmpeg -i '+path.join(__dirname, '../tmp/songs/'+ytId+".webm")+' -vn '+path.join(__dirname, '../tmp/songs/'+ytId+".mp3"), { encoding: 'utf-8' });  // the default is 'buffer'
+                        fs.unlinkSync(path.join(__dirname, '../tmp/songs/'+ytId+".webm"))
+                        currentAtSameTime--
+                        songDone(ytId)
+                    } catch (err) {
+                        console.log(err);
+                    }
+                })();
+                //console.log(Object.values(response.requested_formats)[1])
+            })
+            //YD.download(key, key+".mp3")
         }
     }
 
@@ -269,20 +306,17 @@ async function getLinks() {
     // in library maar niet meer in een playlist (nodig voor geval bestaande jf playlist, nieuwe yt playlist) -> oude yt playlist verwijderen
     for(const el of tmpLib){
         try{
-            fs.unlinkSync(libPath+"/" + jfToYtId(tmpLib,el.Id) + ".mp3");
+            fs.unlinkSync(libPath+jfToYtId(tmpLib,el.Id) + ".mp3");
             deleteFromPlaylistQueue[el.Id] = true
         } catch(e){}
     }
 }
 
-YD.on("finished", async function (err, data) {
-    let el = songs[data.videoId]
-    let description = el.snippet.description.split(/\r?\n/);
-    let info = description[2].split(" · ")
+async function songDone(ytId) {
+    let el = songs[ytId]
 
-    let height = el.snippet.thumbnails[Object.keys(el.snippet.thumbnails)[Object.keys(el.snippet.thumbnails).length - 1]].height;
     await axios
-        .get(el.snippet.thumbnails[Object.keys(el.snippet.thumbnails)[Object.keys(el.snippet.thumbnails).length - 1]].url, {
+        .get(el.thumbnail, {
             responseType: "text",
             responseEncoding: "base64",
         })
@@ -290,49 +324,27 @@ YD.on("finished", async function (err, data) {
             const uri = resp.data.split(';base64,').pop()
             let imgBuffer = Buffer.from(uri, 'base64');
             await sharp(imgBuffer)
-                .resize(height, height)
-                .toFile(path.join(__dirname, '../tmp/img/' + data.videoId + ".jpg"))
+                .resize(1080, 1080)
+                .toFile(path.join(__dirname, '../tmp/img/' + ytId + ".jpg"))
                 .catch(err => console.log(`downisze issue ${err}`))
         }).catch(function (error) {
-            console.error(error, error.message)
+            retryGetRequest(el.thumbnail)
         })
 
-    let title
-    let artist
 
-    try {
-        title= info[0]
-    } catch (error) {
-        title = "Unknown"
-    }
-    try {
-        artist= info[1]
-    } catch (error) {
-        artist = "Unknown"
-    }
     const tags = {
-        title: title,
-        artist: artist,
-        APIC: path.join(__dirname, '../tmp/img/' + data.videoId + ".jpg"),
+        title: el.track,
+        artist: el.artist,
+        album: el.album,
+        year: el.release_year,
     }
 
-    await NodeID3.write(tags, path.join(__dirname, '../tmp/songs/'+data.videoId+".mp3"), function(err) {  })
-
-    await new Promise(r => setTimeout(r, 500)); // random delay wnt anders werkt et ni fz
-
-    fs.copyFileSync( path.join(__dirname, '../tmp/songs/'+data.videoId+".mp3") , libPath+"/"+data.videoId+".mp3");
-    fs.unlinkSync( path.join(__dirname, '../tmp/songs/'+data.videoId+".mp3"));
-    fs.unlinkSync(path.join(__dirname, '../tmp/img/' + data.videoId + ".jpg"));
-
-});
-
-YD.on("error", function(error) {
-    console.log(error);
-});
-
-YD.on("progress", function(progress) {
-    console.log(JSON.stringify(progress));
-});
+    await ffmetadata.write(path.join(__dirname, '../tmp/songs/'+ytId+".mp3"), tags,  function(err) {
+        execSync('ffmpeg -i '+path.join(__dirname, '../tmp/songs/'+ytId+".mp3")+' -i '+path.join(__dirname, '../tmp/img/'+ytId+".jpg -map 0:0 -map 1:0 -c copy -id3v2_version 3 -metadata:s:v title=\"Album cover\" -metadata:s:v comment=\"Cover (front)\" "+libPath+ytId+".mp3"), { encoding: 'utf-8' });  // the default is 'buffer'
+        fs.unlinkSync( path.join(__dirname, '../tmp/songs/'+ytId+".mp3"));
+        fs.unlinkSync(path.join(__dirname, '../tmp/img/' + ytId + ".jpg"));
+    })
+}
 
 function YTPlaylistContains(playlist, ytId) {
     for(const el of playlist)
@@ -390,6 +402,19 @@ function getYtPlaylists(){
     for (const el of Object.values(playlistCollection.playlists))
         playlists.push(el.ytID)
     return playlists
+}
+
+const retryGetRequest = async (url) => {
+
+    while (true)
+        try {
+            return await axios.get(url, {
+                responseType: "text",
+                responseEncoding: "base64",
+            })
+        } catch (error) {
+            console.log("trying again")
+        }
 }
 
 module.exports = router;
