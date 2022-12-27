@@ -232,7 +232,7 @@ async function getLinks() {
     songs = songsN
 
     // download songs which are not in media folder
-    const maxAtSameTime = 10
+    const maxAtSameTime = 20
     let currentAtSameTime = 0
     for(const ytId of Object.keys(songs)){
         await new Promise(r => setTimeout(r, 100)); // beetje splitsen want er geraken er 2 uit de loop bij elke -
@@ -262,8 +262,9 @@ async function getLinks() {
 
                 (async () => {
                     try {
-                        console.log(Object.values(response.requested_formats)[1].url)
-                        const {data} = await axios.get(Object.values(response.requested_formats)[1].url, {responseType: 'arraybuffer'});
+                        const {data} = await axios.get(Object.values(response.requested_formats)[1].url, {responseType: 'arraybuffer'}).catch(function (error) {
+                            return false
+                        });
                         fs.writeFileSync(path.join(__dirname, '../tmp/songs/'+ytId+".webm"), data, 'binary');
                         execSync('ffmpeg -hide_banner -loglevel error -i '+path.join(__dirname, '../tmp/songs/'+ytId+".webm")+' -vn '+path.join(__dirname, '../tmp/songs/'+ytId+".mp3"), { encoding: 'utf-8' });  // the default is 'buffer'
                         fs.unlinkSync(path.join(__dirname, '../tmp/songs/'+ytId+".webm"))
