@@ -232,7 +232,7 @@ async function getLinks() {
     songs = songsN
 
     // download songs which are not in media folder
-    const maxAtSameTime = 20
+    const maxAtSameTime = 1
     let currentAtSameTime = 0
     for(const ytId of Object.keys(songs)){
         await new Promise(r => setTimeout(r, 100)); // beetje splitsen want er geraken er 2 uit de loop bij elke -
