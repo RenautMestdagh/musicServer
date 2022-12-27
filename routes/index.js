@@ -240,6 +240,7 @@ async function getLinks() {
             while(currentAtSameTime >= maxAtSameTime){
                 await new Promise(r => setTimeout(r, 10000)); // 10 seconden wachten voor opnieuw check
             }
+            console.log("start ID "+ytId)
             currentAtSameTime ++
             youtubedl('https://music.youtube.com/watch?v='+ytId, {
                 dumpSingleJson: true,
