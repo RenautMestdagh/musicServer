@@ -28,9 +28,9 @@ const YD = new YoutubeMp3Downloader({
     "ffmpegPath": ffmpegPath,        // FFmpeg binary location
     "outputPath": path.join(__dirname, '../tmp/songs'),    // Output file location (default: the home directory)
     "youtubeVideoQuality": "highestaudio",  // Desired video quality (default: highestaudio)
-    "queueParallelism": 1,                  // Download parallelism (default: 1)
+    "queueParallelism": 10,                  // Download parallelism (default: 1)
     "progressTimeout": 10000,                // Interval in ms for the progress reports (default: 1000)
-    "allowWebm": false                      // Enable download from WebM sources (default: false)
+    "allowWebm": true                      // Enable download from WebM sources (default: false)
 });
 
 
