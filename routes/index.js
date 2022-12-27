@@ -241,7 +241,6 @@ async function getLinks() {
                 await new Promise(r => setTimeout(r, 10000)); // 10 seconden wachten voor opnieuw check
             }
             currentAtSameTime ++
-            console.log(currentAtSameTime)
             youtubedl('https://music.youtube.com/watch?v='+ytId, {
                 dumpSingleJson: true,
                 noCheckCertificates: true,
