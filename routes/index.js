@@ -28,7 +28,7 @@ const YD = new YoutubeMp3Downloader({
     "ffmpegPath": ffmpegPath,        // FFmpeg binary location
     "outputPath": path.join(__dirname, '../tmp/songs'),    // Output file location (default: the home directory)
     "youtubeVideoQuality": "highestaudio",  // Desired video quality (default: highestaudio)
-    "queueParallelism": 50,                  // Download parallelism (default: 1)
+    "queueParallelism": 1,                  // Download parallelism (default: 1)
     "progressTimeout": 10000,                // Interval in ms for the progress reports (default: 1000)
     "allowWebm": false                      // Enable download from WebM sources (default: false)
 });
@@ -276,9 +276,6 @@ async function getLinks() {
 }
 
 YD.on("finished", async function (err, data) {
-
-    await new Promise(r => setTimeout(r, 500)); // random delay om aborted errors te proberen vermijden
-
     let el = songs[data.videoId]
     let description = el.snippet.description.split(/\r?\n/);
     let info = description[2].split(" · ")
