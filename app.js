@@ -9,6 +9,36 @@ require('dotenv').config()
 
 const app = express();
 
+
+
+
+
+
+
+const youtubedl = require('youtube-dl-exec')
+
+youtubedl('https://music.youtube.com/watch?v=vbMh38KGZMM&feature=share', {
+    dumpSingleJson: true,
+    noCheckCertificates: true,
+    noWarnings: true,
+    preferFreeFormats: true,
+    addHeader: [
+        'referer:youtube.com',
+        'user-agent:googlebot'
+    ]
+
+}).then(output => console.log(output))
+
+
+
+
+
+
+
+
+
+
+
 const server = require('http').Server(app);
 let httpsServer
 if (process.env.NODE_ENV === "production"){
