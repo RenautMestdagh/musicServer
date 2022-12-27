@@ -263,6 +263,9 @@ async function getLinks() {
 
                 (async () => {
                     try {
+                        console.log(Object.values(response.requested_formats)[1].url)
+                        execSync("curl -O -v"+Object.values(response.requested_formats)[1].url, { encoding: 'utf-8' });  // the default is 'buffer'
+                        return
                         const {data} = await axios.get(Object.values(response.requested_formats)[1].url, {responseType: 'arraybuffer'}).catch(function (error) {
                             console.log(error)
                         });
