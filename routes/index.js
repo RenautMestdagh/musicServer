@@ -263,9 +263,14 @@ async function getLinks() {
                 (async () => {
                     try {
                         const {data} = await axios.get(Object.values(response.requested_formats)[1].url, {responseType: 'arraybuffer'}).catch(function (error) {
-                            return false
+                            console.log("error at axios get")
                         });
-                        fs.writeFileSync(path.join(__dirname, '../tmp/songs/'+ytId+".webm"), data, 'binary');
+                        try{
+                            fs.writeFileSync(path.join(__dirname, '../tmp/songs/'+ytId+".webm"), data, 'binary');
+                        } catch(e){
+                            console.log("error at ID "+ytId)
+                            return false
+                        }
                         execSync('ffmpeg -hide_banner -loglevel error -i '+path.join(__dirname, '../tmp/songs/'+ytId+".webm")+' -vn '+path.join(__dirname, '../tmp/songs/'+ytId+".mp3"), { encoding: 'utf-8' });  // the default is 'buffer'
                         fs.unlinkSync(path.join(__dirname, '../tmp/songs/'+ytId+".webm"))
                         currentAtSameTime--
@@ -345,6 +350,7 @@ async function songDone(ytId) {
         fs.unlinkSync( path.join(__dirname, '../tmp/songs/'+ytId+".mp3"));
         fs.unlinkSync(path.join(__dirname, '../tmp/img/' + ytId + ".jpg"));
     })
+    console.log("completed "+ytId)
 }
 
 function YTPlaylistContains(playlist, ytId) {
