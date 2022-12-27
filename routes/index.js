@@ -272,7 +272,7 @@ async function getLinks() {
                             console.log("error at ID "+ytId)
                             return false
                         }
-                        execSync('ffmpeg -hide_banner -loglevel error -i '+path.join(__dirname, '../tmp/songs/'+ytId+".webm")+' -vn '+path.join(__dirname, '../tmp/songs/'+ytId+".mp3"), { encoding: 'utf-8' });  // the default is 'buffer'
+                        execSync('ffmpeg -hide_banner -loglevel panic -i '+path.join(__dirname, '../tmp/songs/'+ytId+".webm")+' -vn '+path.join(__dirname, '../tmp/songs/'+ytId+".mp3"), { encoding: 'utf-8' });  // the default is 'buffer'
                         fs.unlinkSync(path.join(__dirname, '../tmp/songs/'+ytId+".webm"))
                         currentAtSameTime--
                         songDone(ytId)
@@ -347,7 +347,7 @@ async function songDone(ytId) {
     }
 
     await ffmetadata.write(path.join(__dirname, '../tmp/songs/'+ytId+".mp3"), tags,  function(err) {
-        execSync('ffmpeg -hide_banner -loglevel error -i '+path.join(__dirname, '../tmp/songs/'+ytId+".mp3")+' -i '+path.join(__dirname, '../tmp/img/'+ytId+".jpg -map 0:0 -map 1:0 -c copy -id3v2_version 3 -metadata:s:v title=\"Album cover\" -metadata:s:v comment=\"Cover (front)\" "+libPath+ytId+".mp3"), { encoding: 'utf-8' });  // the default is 'buffer'
+        execSync('ffmpeg -hide_banner -loglevel panic -i '+path.join(__dirname, '../tmp/songs/'+ytId+".mp3")+' -i '+path.join(__dirname, '../tmp/img/'+ytId+".jpg -map 0:0 -map 1:0 -c copy -id3v2_version 3 -metadata:s:v title=\"Album cover\" -metadata:s:v comment=\"Cover (front)\" "+libPath+ytId+".mp3"), { encoding: 'utf-8' });  // the default is 'buffer'
         fs.unlinkSync( path.join(__dirname, '../tmp/songs/'+ytId+".mp3"));
         fs.unlinkSync(path.join(__dirname, '../tmp/img/' + ytId + ".jpg"));
     })
