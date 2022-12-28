@@ -25,11 +25,11 @@ let jfUrl
 if (process.env.NODE_ENV === "production"){
     ffmpegPath = "/usr/bin/ffmpeg";
     libPath = "/media/OneDrive/"
-    jfUrl = "localhost"
+    jfUrl = "localhost:8920"
 } else {
     ffmpegPath = path.join(__dirname, '../ffmpeg.exe');
     libPath = "C:/Users/renau/OneDrive/Muziek/"
-    jfUrl = "193.123.36.128"
+    jfUrl = "renautmusic.ml"
 }
 ffmetadata.setFfmpegPath(ffmpegPath)
 
@@ -58,7 +58,7 @@ router.post('/', function(req, res) {
             let playlistObj = playlistCollectionContainsYT(el.ID)
             oldYtPlaylists = oldYtPlaylists.filter(e => e !== playlistObj.ytID)
             let jfPlId = await axios.post(
-                "http://"+jfUrl+"/Playlists?api_key="+process.env.JF_API_KEY, {
+                "https://"+jfUrl+"/Playlists?api_key="+process.env.JF_API_KEY, {
                     Name: el.plS,
                     userId: process.env.JF_UID
                 }, {headers: { "Accept-Encoding": "gzip,deflate,compress" }},
@@ -69,7 +69,7 @@ router.post('/', function(req, res) {
             if(!el.nieuw && playlistObj.name !== el.plS){
                 oldJfPlaylists = oldJfPlaylists.filter(e => e !== playlistObj.jfID)
                 await axios.delete(
-                    "http://"+jfUrl+"/Items/"+playlistObj.jfID+"?api_key="+process.env.JF_API_KEY, {headers: { "Accept-Encoding": "gzip,deflate,compress" }},
+                    "https://"+jfUrl+"/Items/"+playlistObj.jfID+"?api_key="+process.env.JF_API_KEY, {headers: { "Accept-Encoding": "gzip,deflate,compress" }},
                 )
             }
 
@@ -115,7 +115,7 @@ router.post('/', function(req, res) {
 
         for (const el of oldJfPlaylists){
             await axios.delete(
-                "http://"+jfUrl+"/Items/"+el+"?api_key="+process.env.JF_API_KEY, {headers: { "Accept-Encoding": "gzip,deflate,compress" }},
+                "https://"+jfUrl+"/Items/"+el+"?api_key="+process.env.JF_API_KEY, {headers: { "Accept-Encoding": "gzip,deflate,compress" }},
             )
         }
 
@@ -142,7 +142,7 @@ executeAll();
 async function getLibrary() {
 
     lib = await axios.get(
-        "http://"+jfUrl+"/items?api_key="+process.env.JF_API_KEY+"&userId="+process.env.JF_UID+"&parentId="+process.env.JF_LIBID+"&Fields=Path", {
+        "https://"+jfUrl+"/items?api_key="+process.env.JF_API_KEY+"&userId="+process.env.JF_UID+"&parentId="+process.env.JF_LIBID+"&Fields=Path", {
             headers: { "Accept-Encoding": "gzip,deflate,compress" }
         }
     )
@@ -193,7 +193,7 @@ async function getLinks() {
 
         //checken als er liedjes in JF playlist zitten die niet in yt playlist zitten
         let jfPlaylist = await axios.get(
-            "http://"+jfUrl+"/Playlists/"+el.jfID+"/Items?api_key="+process.env.JF_API_KEY+"&userId="+process.env.JF_UID+"&Fields=Path", {
+            "https://"+jfUrl+"/Playlists/"+el.jfID+"/Items?api_key="+process.env.JF_API_KEY+"&userId="+process.env.JF_UID+"&Fields=Path", {
                 headers: { "Accept-Encoding": "gzip,deflate,compress" }
             }
         )
@@ -209,7 +209,7 @@ async function getLinks() {
         for(const key of Object.keys(deleteFromPlaylistQueue)){
             if(!jfLibraryContains(lib, key)){    // kunt pas uit playlist verwijderen alst ni meer in JF library zit, lol
                 await axios.delete(
-                    "http://"+jfUrl+"/Playlists/"+el.jfID+"/Items?EntryIds="+key+"&api_key="+process.env.JF_API_KEY+"&userId="+process.env.JF_UID, {
+                    "https://"+jfUrl+"/Playlists/"+el.jfID+"/Items?EntryIds="+key+"&api_key="+process.env.JF_API_KEY+"&userId="+process.env.JF_UID, {
                         headers: { "Accept-Encoding": "gzip,deflate,br" }
                     }
                 )
@@ -265,7 +265,7 @@ async function getLinks() {
                 if(jfId)
                     if(!jfLibraryContains(jfPlaylist, jfId)){
                         await axios.post(
-                            "http://"+jfUrl+"/Playlists/"+jfPlID+"/Items?Ids="+jfId+"&api_key="+process.env.JF_API_KEY+"&userId="+process.env.JF_UID, {
+                            "https://"+jfUrl+"/Playlists/"+jfPlID+"/Items?Ids="+jfId+"&api_key="+process.env.JF_API_KEY+"&userId="+process.env.JF_UID, {
                                 headers: { "Accept-Encoding": "gzip,deflate,compress" }
                             }
                         )
