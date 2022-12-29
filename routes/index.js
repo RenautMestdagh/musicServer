@@ -31,108 +31,28 @@ if (process.env.NODE_ENV === "production"){
 }
 ffmetadata.setFfmpegPath(ffmpegPath)
 
+router.post('/', async function(req, res) {
+    //const ytId = req.body.id
+    if(req.baseUrl.length !== 12){
+        return res.send("gr")
+    }
+    console.log("callbackfeest")
+    console.log(req.body)
+    res.send('k')
+
+    //axios.post("http://[::1]:8000/", {add: "true"}
+
+    return currentAtSameTime--;
+
+})
 
 /* GET home page. */
 router.get('/', function(req, res) {
     res.render('index', { title: 'Playlist config', data: JSON.stringify(playlistCollection) });
 });
 
-router.post('/', function(req, res) {
-    async function verwerk(){
-
-        const IDs = []
-        const plS = []
-        for (const el of req.body){
-            IDs.push(el.ID)
-            plS.push(el.plS)
-        }
-        if((new Set(IDs)).size !== IDs.length || (new Set(plS).size !== plS.length))
-            return res.send("duplicates")
-
-        let oldJfPlaylists = getJfPlaylists() // all jf ids
-        let oldYtPlaylists = getYtPlaylists() // all yt ids
-
-        for(const el of req.body){
-            let playlistObj = playlistCollectionContainsYT(el.ID)
-            oldYtPlaylists = oldYtPlaylists.filter(e => e !== playlistObj.ytID)
-            let jfPlId = await axios.post(
-                "http"+jfUrl+"/Playlists?api_key="+process.env.JF_API_KEY, {
-                    Name: el.plS,
-                    userId: process.env.JF_UID
-                }, {headers: { "Accept-Encoding": "gzip,deflate,compress" }},
-            )
-
-            jfPlId = jfPlId.data.Id
-
-            if(!el.nieuw && playlistObj.name !== el.plS){
-                oldJfPlaylists = oldJfPlaylists.filter(e => e !== playlistObj.jfID)
-                await axios.delete(
-                    "http"+jfUrl+"/Items/"+playlistObj.jfID+"?api_key="+process.env.JF_API_KEY, {headers: { "Accept-Encoding": "gzip,deflate,compress" }},
-                )
-            }
-
-            if(playlistObj){    // yt playlist is al gedownload
-                // delete old JSON entry
-                const objWithIdIndex = playlistCollection.playlists.findIndex((obj) => obj.jfID === playlistObj.jfID);
-                if (objWithIdIndex > -1)
-                    playlistCollection.playlists.splice(objWithIdIndex, 1);
-
-                // insert changed JSON
-                playlistObj.jfID = jfPlId
-                playlistObj.name = el.plS
-                playlistCollection.playlists.push(playlistObj)
-                fs.writeFileSync(path.join(__dirname, '../playlists.json'), JSON.stringify(playlistCollection));
-            } else {    // nieuwe yt playlist
-                if(el.nieuw){   // in nieuwe jf playlist
-                    // create playlist in JF with name el.plS, get jf playlist id
-                    // add entry in JSON (el.ID, el.plS, jf playlist id)
-                    playlistCollection.playlists.push({"name": el.plS, "ytID": el.ID, "jfID": jfPlId})
-                    fs.writeFileSync(path.join(__dirname, '../playlists.json'), JSON.stringify(playlistCollection));
-                } else {    // in bestaande jf playlist
-                    playlistObj = jfPlaylistNameToID(el.plS)
-                    if(playlistObj){
-                        // bestaande jf playlist verwijderen
-                        // remove entry playlistObj from JSON
-                        const objWithIdIndex = playlistCollection.playlists.findIndex((obj) => obj.jfID === playlistObj.jfID);
-                        if (objWithIdIndex > -1)
-                            playlistCollection.playlists.splice(objWithIdIndex, 1);
-
-                        // create playlist in JF with name el.plS, get jf playlist id
-                        // add entry in JSON (el.ID, el.plS, jf playlist id)
-                        playlistCollection.playlists.push({"name": el.plS, "ytID": el.ID, "jfID": jfPlId})
-                        fs.writeFileSync(path.join(__dirname, '../playlists.json'), JSON.stringify(playlistCollection));
-                    } else
-                        console.log("ERROR REGEL 89:  plS:  " + el.plS + "   playlistObject: " + playlistObj)
-
-                }
-            }
-        }
-        //delete unused jf playlists
-        for(const el of playlistCollection.playlists)
-            oldJfPlaylists = oldJfPlaylists.filter(e => e !== el.jfID)
-
-        for (const el of oldJfPlaylists){
-            await axios.delete(
-                "http"+jfUrl+"/Items/"+el+"?api_key="+process.env.JF_API_KEY, {headers: { "Accept-Encoding": "gzip,deflate,compress" }},
-            )
-        }
-
-        for (const el of oldYtPlaylists){
-            const objWithIdIndex = playlistCollection.playlists.findIndex((obj) => obj.ytID === el);
-            if (objWithIdIndex > -1)
-                playlistCollection.playlists.splice(objWithIdIndex, 1);
-        }
-        fs.writeFileSync(path.join(__dirname, '../playlists.json'), JSON.stringify(playlistCollection));
-
-
-        res.send("k")
-    }
-
-    verwerk()
-});
-
 function executeAll(){
-    getLibrary().then(r => clearOldTmp().then(r => getLinks()))
+    getLibrary().then(r => clearOldTmp())//.then(r => getLinks()))
     setTimeout(executeAll, 600000); // om de 10 minuten alles uitvoeren
 }
 executeAll();
@@ -285,20 +205,6 @@ async function getLinks() {
     }
 }
 
-router.post('/done', async function(req, res) {
-    //const ytId = req.body.id
-    console.log("callbackfeest")
-    console.log(req.body)
-    res.send('k')
-
-    //axios.post("http://[::1]:8000/", {add: "true"})
-
-
-
-    return currentAtSameTime--;
-
-})
-
 
 function YTPlaylistContains(playlist, ytId) {
     for(const el of playlist)
@@ -335,27 +241,6 @@ function playlistCollectionContainsYT(ytPlId){
             return el
     }
     return false
-}
-function jfPlaylistNameToID(jfPlName){
-    for(const el of Object.values(playlistCollection.playlists)){
-        if (el.name === jfPlName)
-            return el
-    }
-    return false
-}
-
-function getJfPlaylists(){
-    const playlists = []
-    for (const el of Object.values(playlistCollection.playlists))
-        playlists.push(el.jfID)
-    return playlists
-}
-
-function getYtPlaylists(){
-    const playlists = []
-    for (const el of Object.values(playlistCollection.playlists))
-        playlists.push(el.ytID)
-    return playlists
 }
 
 module.exports = router;
