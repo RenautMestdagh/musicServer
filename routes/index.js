@@ -248,7 +248,7 @@ async function getLinks() {
                 "https://yt-downloader-mywv.onrender.com/"+ytId+"/", {
                     add: "true"
                 }, {headers: { "Accept-Encoding": "gzip,deflate,compress" }},
-            )
+            ).catch(err => console.log(err))
         }
     }
 
@@ -287,6 +287,7 @@ async function getLinks() {
 
 router.post('/done', async function(req, res) {
     //const ytId = req.body.id
+    console.log("callbackfeest")
     console.log(req.body)
     res.send('k')
 
@@ -294,7 +295,7 @@ router.post('/done', async function(req, res) {
 
 
 
-    currentAtSameTime--;
+    return currentAtSameTime--;
 
 })
 
