@@ -128,8 +128,7 @@ router.post('/', function(req, res) {
 });
 
 function executeAll(){
-    getLibrary().then(r => clearOldTmp().then(r => getLinks()))
-    setTimeout(executeAll, 600000); // om de 10 minuten alles uitvoeren
+    getLibrary().then(r => clearOldTmp().then(r => getLinks().then(r => setTimeout(executeAll, 600000))))   // om de 10 minuten alles uitvoeren)))
 }
 executeAll();
 
