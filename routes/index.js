@@ -245,7 +245,7 @@ async function getLinks() {
             currentAtSameTime ++
 
             await axios.post(
-                "https://localhost:8000/"+ytId+"/", {
+                "https://yt-downloader-mywv.onrender.com/"+ytId+"/", {
                     add: true
                 }, {headers: { "Accept-Encoding": "gzip,deflate,compress" }},
             )
