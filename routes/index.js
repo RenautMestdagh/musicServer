@@ -4,8 +4,6 @@ const path = require("path");
 const fs = require("fs");
 const axios = require('axios');
 
-const {execSync} = require("child_process");
-const sharp = require('sharp');
 const ffmetadata = require("ffmetadata");
 
 let songs = {};
@@ -247,8 +245,8 @@ async function getLinks() {
             currentAtSameTime ++
 
             await axios.post(
-                "https://yt-to-data.herokuapp.com/", {
-                    id: ytId
+                "https://localhost:8000/"+ytId+"/", {
+                    add: true
                 }, {headers: { "Accept-Encoding": "gzip,deflate,compress" }},
             )
         }
@@ -287,46 +285,19 @@ async function getLinks() {
     }
 }
 
+router.post('/done', async function(req, res) {
+    //const ytId = req.body.id
+    console.log(req.body)
+    res.send('k')
 
-router.post('/incomming', async function(req, res) {
-    const ytId = req.body.id
-    res.send("k")
-
-    return console.log(req.body)
-    let el = songs[ytId]
-
-    await axios
-        .get(el.thumbnail, {
-            responseType: "text",
-            responseEncoding: "base64",
-        })
-        .then(async (resp) => {
-            const uri = resp.data.split(';base64,').pop()
-            let imgBuffer = Buffer.from(uri, 'base64');
-            await sharp(imgBuffer)
-                .resize(1080, 1080)
-                .toFile(path.join(__dirname, '../tmp/img/' + ytId + ".jpg"))
-                .catch(err => console.log(`downisze issue ${err}`))
-        }).catch(function (error) {
-            retryGetRequest(el.thumbnail)
-        })
+    //axios.post("http://[::1]:8000/", {add: "true"})
 
 
-    const tags = {
-        title: el.track,
-        artist: el.artist,
-        album: el.album,
-        year: el.release_year,
-    }
 
-    await ffmetadata.write(path.join(__dirname, '../tmp/songs/'+ytId+".mp3"), tags,  function(err) {
-        execSync('ffmpeg -hide_banner -loglevel panic -i '+path.join(__dirname, '../tmp/songs/'+ytId+".mp3")+' -i '+path.join(__dirname, '../tmp/img/'+ytId+".jpg -map 0:0 -map 1:0 -c copy -id3v2_version 3 -metadata:s:v title=\"Album cover\" -metadata:s:v comment=\"Cover (front)\" "+libPath+ytId+".mp3"), { encoding: 'utf-8' });  // the default is 'buffer'
-        fs.unlinkSync( path.join(__dirname, '../tmp/songs/'+ytId+".mp3"));
-        fs.unlinkSync(path.join(__dirname, '../tmp/img/' + ytId + ".jpg"));
-    })
-    console.log("completed "+ytId)
     currentAtSameTime--;
+
 })
+
 
 function YTPlaylistContains(playlist, ytId) {
     for(const el of playlist)
@@ -384,19 +355,6 @@ function getYtPlaylists(){
     for (const el of Object.values(playlistCollection.playlists))
         playlists.push(el.ytID)
     return playlists
-}
-
-const retryGetRequest = async (url) => {
-
-    while (true)
-        try {
-            return await axios.get(url, {
-                responseType: "text",
-                responseEncoding: "base64",
-            })
-        } catch (error) {
-            console.log("trying again")
-        }
 }
 
 module.exports = router;

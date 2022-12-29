@@ -1,11 +1,10 @@
 {
-  "name": "express-locallibrary-tutorial",
+  "name": "music-server",
   "version": "0.0.0",
   "private": true,
   "scripts": {
     "start": "NODE_ENV=production node ./bin/www",
-    "devstart": "NODE_ENV=development node ./bin/www",
-    "build": "sudo apt install python3"
+    "devstart": "NODE_ENV=development nodemon ./bin/www"
   },
   "dependencies": {
     "axios": "^1.2.1",
@@ -18,9 +17,7 @@
     "http-errors": "~1.6.3",
     "morgan": "~1.9.1",
     "nvm": "^0.0.4",
-    "pug": "2.0.0-beta11",
-    "sharp": "^0.31.3",
-    "youtube-dl-exec": "^2.1.10"
+    "pug": "2.0.0-beta11"
   },
   "devDependencies": {
     "nodemon": "^2.0.20"

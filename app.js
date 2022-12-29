@@ -62,15 +62,15 @@ app.use(
 )
 
 app.use('/login', require('./routes/login'));
-app.use(function(req, res, next){
-
-    if (!req.session.userId) {
-        if(req.method==='POST')
-            return res.send('noSession')
-        return res.redirect('/login')
-    }
-    next()
-})
+// app.use(function(req, res, next){
+//
+//     if (!req.session.userId) {
+//         if(req.method==='POST')
+//             return res.send('noSession')
+//         return res.redirect('/login')
+//     }
+//     next()
+// })
 
 app.use('/', require('./routes/index'));
 
