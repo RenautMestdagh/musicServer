@@ -3,8 +3,10 @@ const router = express.Router();
 const path = require("path");
 const fs = require("fs");
 const axios = require('axios');
-const youtubedl = require('youtube-dl-exec')
-const ffmetadata = require("ffmetadata");
+const youtubedl = require('youtube-dl-exec');
+
+const {execSync} = require("child_process");
+const sharp = require('sharp');
 
 let songs = {};
 let ytPlaylists = {};
@@ -12,43 +14,117 @@ let jfPlaylists = {};
 let deleteFromPlaylistQueue = {};   // with jf IDs
 let lib;
 
-const maxAtSameTime = 1
-let currentAtSameTime = 0
-
 let playlistCollection = require('../playlists.json');
 
 let ffmpegPath
 let libPath
-let jfUrl
+
 if (process.env.NODE_ENV === "production"){
     ffmpegPath = "/usr/bin/ffmpeg";
     libPath = "/media/OneDrive/"
-    jfUrl = "://localhost:8096"
 } else {
     ffmpegPath = path.join(__dirname, '../ffmpeg.exe');
-    libPath = "C:/Users/renau/OneDrive/Muziek/"
-    jfUrl = "s://renautmusic.ml"
+    libPath = "/mnt/c/Users/renau/OneDrive/Muziek/"
 }
-ffmetadata.setFfmpegPath(ffmpegPath)
 
-router.post('/', async function(req, res) {
-    //const ytId = req.body.id
-    if(req.baseUrl.length !== 12){
-        return res.send("gr")
-    }
-    console.log("callbackfeest")
-    console.log(req.body)
-    res.send('k')
-
-    //axios.post("http://[::1]:8000/", {add: "true"}
-
-    return currentAtSameTime--;
-
-})
 
 /* GET home page. */
 router.get('/', function(req, res) {
     res.render('index', { title: 'Playlist config', data: JSON.stringify(playlistCollection) });
+});
+
+router.post('/', function(req, res) {
+    async function verwerk(){
+
+        const IDs = []
+        const plS = []
+        for (const el of req.body){
+            IDs.push(el.ID)
+            plS.push(el.plS)
+        }
+        if((new Set(IDs)).size !== IDs.length || (new Set(plS).size !== plS.length))
+            return res.send("duplicates")
+
+        let oldJfPlaylists = getJfPlaylists() // all jf ids
+        let oldYtPlaylists = getYtPlaylists() // all yt ids
+
+        for(const el of req.body){
+            let playlistObj = playlistCollectionContainsYT(el.ID)
+            oldYtPlaylists = oldYtPlaylists.filter(e => e !== playlistObj.ytID)
+            let jfPlId = await axios.post(
+                "http://193.123.36.128/Playlists?api_key="+process.env.JF_API_KEY, {
+                    Name: el.plS,
+                    userId: process.env.JF_UID
+                }, {headers: { "Accept-Encoding": "gzip,deflate,compress" }},
+            )
+
+            jfPlId = jfPlId.data.Id
+
+            if(!el.nieuw && playlistObj.name !== el.plS){
+                oldJfPlaylists = oldJfPlaylists.filter(e => e !== playlistObj.jfID)
+                await axios.delete(
+                    "http://193.123.36.128/Items/"+playlistObj.jfID+"?api_key="+process.env.JF_API_KEY, {headers: { "Accept-Encoding": "gzip,deflate,compress" }},
+                )
+            }
+
+            if(playlistObj){    // yt playlist is al gedownload
+                // delete old JSON entry
+                const objWithIdIndex = playlistCollection.playlists.findIndex((obj) => obj.jfID === playlistObj.jfID);
+                if (objWithIdIndex > -1)
+                    playlistCollection.playlists.splice(objWithIdIndex, 1);
+
+                // insert changed JSON
+                playlistObj.jfID = jfPlId
+                playlistObj.name = el.plS
+                playlistCollection.playlists.push(playlistObj)
+                fs.writeFileSync(path.join(__dirname, '../playlists.json'), JSON.stringify(playlistCollection));
+            } else {    // nieuwe yt playlist
+                if(el.nieuw){   // in nieuwe jf playlist
+                    // create playlist in JF with name el.plS, get jf playlist id
+                    // add entry in JSON (el.ID, el.plS, jf playlist id)
+                    playlistCollection.playlists.push({"name": el.plS, "ytID": el.ID, "jfID": jfPlId})
+                    fs.writeFileSync(path.join(__dirname, '../playlists.json'), JSON.stringify(playlistCollection));
+                } else {    // in bestaande jf playlist
+                    playlistObj = jfPlaylistNameToID(el.plS)
+                    if(playlistObj){
+                        // bestaande jf playlist verwijderen
+                        // remove entry playlistObj from JSON
+                        const objWithIdIndex = playlistCollection.playlists.findIndex((obj) => obj.jfID === playlistObj.jfID);
+                        if (objWithIdIndex > -1)
+                            playlistCollection.playlists.splice(objWithIdIndex, 1);
+
+                        // create playlist in JF with name el.plS, get jf playlist id
+                        // add entry in JSON (el.ID, el.plS, jf playlist id)
+                        playlistCollection.playlists.push({"name": el.plS, "ytID": el.ID, "jfID": jfPlId})
+                        fs.writeFileSync(path.join(__dirname, '../playlists.json'), JSON.stringify(playlistCollection));
+                    } else
+                        console.log("ERROR REGEL 89:  plS:  " + el.plS + "   playlistObject: " + playlistObj)
+
+                }
+            }
+        }
+        //delete unused jf playlists
+        for(const el of playlistCollection.playlists)
+            oldJfPlaylists = oldJfPlaylists.filter(e => e !== el.jfID)
+
+        for (const el of oldJfPlaylists){
+            await axios.delete(
+                "http://193.123.36.128/Items/"+el+"?api_key="+process.env.JF_API_KEY, {headers: { "Accept-Encoding": "gzip,deflate,compress" }},
+            )
+        }
+
+        for (const el of oldYtPlaylists){
+            const objWithIdIndex = playlistCollection.playlists.findIndex((obj) => obj.ytID === el);
+            if (objWithIdIndex > -1)
+                playlistCollection.playlists.splice(objWithIdIndex, 1);
+        }
+        fs.writeFileSync(path.join(__dirname, '../playlists.json'), JSON.stringify(playlistCollection));
+
+
+        res.send("k")
+    }
+
+    verwerk()
 });
 
 function executeAll(){
@@ -60,7 +136,7 @@ executeAll();
 async function getLibrary() {
 
     lib = await axios.get(
-        "http"+jfUrl+"/items?api_key="+process.env.JF_API_KEY+"&userId="+process.env.JF_UID+"&parentId="+process.env.JF_LIBID+"&Fields=Path", {
+        "http://193.123.36.128/items?api_key="+process.env.JF_API_KEY+"&userId="+process.env.JF_UID+"&parentId="+process.env.JF_LIBID+"&Fields=Path", {
             headers: { "Accept-Encoding": "gzip,deflate,compress" }
         }
     )
@@ -77,21 +153,6 @@ async function clearOldTmp() {
     for(const file of img)
         fs.unlinkSync(path.join(__dirname, '../tmp/img/'+file))
 }
-
-async function init(){
-    await youtubedl("https://music.youtube.com/watch?v=Nm08yUg38tE", {
-        noCheckCertificates: true,
-        noWarnings: true,
-        preferFreeFormats: true,
-        addHeader: [
-            'referer:youtube.com',
-            'user-agent:googlebot'
-        ],
-        output:"tmp/Nm08yUg38tE.mp3",
-        format: "bestaudio",
-    })
-}
-init()
 
 async function getLinks() {
 
@@ -126,7 +187,7 @@ async function getLinks() {
 
         //checken als er liedjes in JF playlist zitten die niet in yt playlist zitten
         let jfPlaylist = await axios.get(
-            "http"+jfUrl+"/Playlists/"+el.jfID+"/Items?api_key="+process.env.JF_API_KEY+"&userId="+process.env.JF_UID+"&Fields=Path", {
+            "http://193.123.36.128/Playlists/"+el.jfID+"/Items?api_key="+process.env.JF_API_KEY+"&userId="+process.env.JF_UID+"&Fields=Path", {
                 headers: { "Accept-Encoding": "gzip,deflate,compress" }
             }
         )
@@ -142,7 +203,7 @@ async function getLinks() {
         for(const key of Object.keys(deleteFromPlaylistQueue)){
             if(!jfLibraryContains(lib, key)){    // kunt pas uit playlist verwijderen alst ni meer in JF library zit, lol
                 await axios.delete(
-                    "http"+jfUrl+"/Playlists/"+el.jfID+"/Items?EntryIds="+key+"&api_key="+process.env.JF_API_KEY+"&userId="+process.env.JF_UID, {
+                    "http://193.123.36.128/Playlists/"+el.jfID+"/Items?EntryIds="+key+"&api_key="+process.env.JF_API_KEY+"&userId="+process.env.JF_UID, {
                         headers: { "Accept-Encoding": "gzip,deflate,br" }
                     }
                 )
@@ -170,20 +231,18 @@ async function getLinks() {
     songs = songsN
 
     // download songs which are not in media folder
+    const maxAtSameTime = 10
+    let currentAtSameTime = 0
     for(const ytId of Object.keys(songs)){
         await new Promise(r => setTimeout(r, 100)); // beetje splitsen want er geraken er 2 uit de loop bij elke -
         if(!fs.existsSync(path.join(__dirname, '../tmp/songs/'+ytId+".mp3")) && !fs.existsSync(path.join(__dirname, '../tmp/songs/'+ytId+".webm")) && !fs.existsSync(libPath+ytId+".mp3")){
             while(currentAtSameTime >= maxAtSameTime){
                 await new Promise(r => setTimeout(r, 10000)); // 10 seconden wachten voor opnieuw check
             }
-            console.log("start ID "+ytId)
             currentAtSameTime ++
-
-            await axios.post(
-                "https://yt-downloader-mywv.onrender.com/"+ytId+"/", {
-                    add: "true"
-                }, {headers: { "Accept-Encoding": "gzip,deflate,compress" }},
-            ).catch(err => console.log(err))
+            console.log("Currently downloading: "+ytId)
+            await downloadSong(ytId)
+            currentAtSameTime --
         }
     }
 
@@ -198,7 +257,7 @@ async function getLinks() {
                 if(jfId)
                     if(!jfLibraryContains(jfPlaylist, jfId)){
                         await axios.post(
-                            "http"+jfUrl+"/Playlists/"+jfPlID+"/Items?Ids="+jfId+"&api_key="+process.env.JF_API_KEY+"&userId="+process.env.JF_UID, {
+                            "http://193.123.36.128/Playlists/"+jfPlID+"/Items?Ids="+jfId+"&api_key="+process.env.JF_API_KEY+"&userId="+process.env.JF_UID, {
                                 headers: { "Accept-Encoding": "gzip,deflate,compress" }
                             }
                         )
@@ -220,6 +279,65 @@ async function getLinks() {
     }
 }
 
+async function downloadSong(id){
+
+    let metadata = await youtubedl("https://music.youtube.com/watch?v="+id, {
+        dumpSingleJson: true,
+        noCheckCertificates: true,
+        noWarnings: true,
+        preferFreeFormats: true,
+        addHeader: [
+            'referer:youtube.com',
+            'user-agent:googlebot'
+        ]
+    })
+
+    await youtubedl("https://music.youtube.com/watch?v="+id, {
+        noCheckCertificates: true,
+        noWarnings: true,
+        preferFreeFormats: true,
+        addHeader: [
+            'referer:youtube.com',
+            'user-agent:googlebot'
+        ],
+        output:"tmp/songs/"+id+"X.mp3",
+        format: "bestaudio",
+    }).then(async function(){
+
+        await axios
+            .get(metadata.thumbnail, {
+                responseType: "text",
+                responseEncoding: "base64",
+            })
+            .then(async (resp) => {
+                const uri = resp.data.split(';base64,').pop()
+                let imgBuffer = Buffer.from(uri, 'base64');
+                await sharp(imgBuffer)
+                    .resize(1080, 1080)
+                    .toFile('tmp/img/' + metadata.id + ".jpg")
+                    .catch(err => console.log(`downisze issue ${err}`))
+
+            }).catch(function (error) {
+                console.error(error, error.message)
+            })
+
+        execSync('ffmpeg -i ' + 'tmp/songs/' + metadata.id + 'X.mp3 -id3v2_version 3 ' +
+            ' -metadata title="' + metadata.track +
+            '" -metadata artist="' + metadata.artist +
+            '" -metadata album="' + metadata.album +
+            '" tmp/songs/' + id + ".mp3", {encoding: 'utf-8'});
+
+        fs.unlinkSync('tmp/songs/' + metadata.id + 'X.mp3')
+
+        console.log(execSync('ls /', {encoding: 'utf-8'}))
+        execSync('ffmpeg -i tmp/songs/' + id + ".mp3"+' -i tmp/img/' + id + ".jpg -map 0:0 -map 1:0 -c copy -id3v2_version 3 " +
+            "-metadata:s:v title=\"Album cover\" -metadata:s:v comment=\"Cover (front)\" "+libPath + id + ".mp3", { encoding: 'utf-8' });  // the default is 'buffer'
+
+        fs.unlinkSync('tmp/songs/' + metadata.id + '.mp3')
+        fs.unlinkSync('tmp/img/' + metadata.id + '.jpg')
+
+    })
+}
 
 function YTPlaylistContains(playlist, ytId) {
     for(const el of playlist)
@@ -256,6 +374,40 @@ function playlistCollectionContainsYT(ytPlId){
             return el
     }
     return false
+}
+function jfPlaylistNameToID(jfPlName){
+    for(const el of Object.values(playlistCollection.playlists)){
+        if (el.name === jfPlName)
+            return el
+    }
+    return false
+}
+
+function getJfPlaylists(){
+    const playlists = []
+    for (const el of Object.values(playlistCollection.playlists))
+        playlists.push(el.jfID)
+    return playlists
+}
+
+function getYtPlaylists(){
+    const playlists = []
+    for (const el of Object.values(playlistCollection.playlists))
+        playlists.push(el.ytID)
+    return playlists
+}
+
+const retryGetRequest = async (url) => {
+
+    while (true)
+        try {
+            return await axios.get(url, {
+                responseType: "text",
+                responseEncoding: "base64",
+            })
+        } catch (error) {
+            console.log("trying again")
+        }
 }
 
 module.exports = router;
