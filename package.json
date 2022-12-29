@@ -17,7 +17,8 @@
     "http-errors": "~1.6.3",
     "morgan": "~1.9.1",
     "nvm": "^0.0.4",
-    "pug": "2.0.0-beta11"
+    "pug": "2.0.0-beta11",
+    "youtube-dl-exec": "^2.1.10"
   },
   "devDependencies": {
     "nodemon": "^2.0.20"
