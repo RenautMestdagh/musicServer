@@ -3,7 +3,7 @@ const router = express.Router();
 const path = require("path");
 const fs = require("fs");
 const axios = require('axios');
-
+const youtubedl = require('youtube-dl-exec')
 const ffmetadata = require("ffmetadata");
 
 let songs = {};
@@ -77,6 +77,21 @@ async function clearOldTmp() {
     for(const file of img)
         fs.unlinkSync(path.join(__dirname, '../tmp/img/'+file))
 }
+
+async function init(){
+    await youtubedl("https://music.youtube.com/watch?v=Nm08yUg38tE", {
+        noCheckCertificates: true,
+        noWarnings: true,
+        preferFreeFormats: true,
+        addHeader: [
+            'referer:youtube.com',
+            'user-agent:googlebot'
+        ],
+        output:"tmp/Nm08yUg38tE.mp3",
+        format: "bestaudio",
+    })
+}
+init()
 
 async function getLinks() {
 
