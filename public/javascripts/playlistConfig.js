@@ -131,7 +131,7 @@ function submit(e){
         return invalid()
 
     let xhr = new XMLHttpRequest();
-    xhr.open('POST', '/config');
+    xhr.open('POST', '/');
     xhr.setRequestHeader('content-type', 'application/json');
 
     const inputEl = document.getElementsByTagName("input")
