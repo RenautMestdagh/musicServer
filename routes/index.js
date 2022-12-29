@@ -23,7 +23,7 @@ let jfUrl
 if (process.env.NODE_ENV === "production"){
     ffmpegPath = "/usr/bin/ffmpeg";
     libPath = "/media/OneDrive/"
-    jfUrl = "http://localhost"
+    jfUrl = "http://localhost:8096"
 } else {
     ffmpegPath = path.join(__dirname, '../ffmpeg.exe');
     libPath = "/mnt/c/Users/renau/OneDrive/Muziek/"
