@@ -172,7 +172,6 @@ function submit(e){
         for (const el of selectEl)
             el.disabled = false
     }
-    console.log(data)
     xhr.send(JSON.stringify(data));
 }
 
