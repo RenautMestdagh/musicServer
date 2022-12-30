@@ -234,7 +234,7 @@ async function getLinks() {
     for(const ytId of Object.keys(songs)){
         if(!fs.existsSync('tmp/songs/'+ytId+".mp3") && !fs.existsSync(libPath+ytId+".mp3")){
             while(currentAtSameTime >= maxAtSameTime){
-                await new Promise(r => setTimeout(r, 5000)); // 10 seconden wachten voor opnieuw check
+                await new Promise(r => setTimeout(r, randomIntFromInterval(5000, 10000))); // 10 seconden wachten voor opnieuw check
             }
             currentAtSameTime ++
             console.log("Currently downloading: "+ytId)
@@ -247,7 +247,6 @@ async function getLinks() {
         const jfPlID = playlistCollectionContainsYT(el[0]).jfID
         const ytPlaylist = ytPlaylists[el[0]]
         const jfPlaylist = jfPlaylists[jfPlID]
-        console.log(jfPlaylist)
 
         if(ytPlaylist.length !== jfPlaylist.length)
             for(const el of ytPlaylist){
@@ -450,6 +449,10 @@ function playlistCollectionContainsName(plName){
             return el
     }
     return false
+}
+
+function randomIntFromInterval(min, max) { // min and max included
+    return Math.floor(Math.random() * (max - min + 1) + min)
 }
 
 module.exports = router;
