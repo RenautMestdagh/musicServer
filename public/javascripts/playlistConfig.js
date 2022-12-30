@@ -99,7 +99,7 @@ function removeNode(e){
         document.body.removeChild(e.target.parentNode.parentNode)
 }
 
-function submit(e){
+function submit(){
     document.getElementsByTagName("p")[0].innerText = ""
     const input = document.getElementsByClassName("playlistEl")
     const data = []
@@ -127,7 +127,7 @@ function submit(e){
         IDs.push(el.ID)
         plS.push(el.plS)
     }
-    if((new Set(IDs)).size !== IDs.length || (new Set(plS).size !== plS.length))
+    if((new Set(IDs)).size !== IDs.length || (new Set(plS).size !== plS.length))       // duplicate yt id or jf name
         return invalid()
 
     let xhr = new XMLHttpRequest();
@@ -169,8 +169,15 @@ function submit(e){
         }
 
         const selectEl = document.getElementsByTagName("select")
-        for (const el of selectEl)
+        for (const el of selectEl){
             el.disabled = false
+            for(const ell of JSON.parse(xhr.response))
+                for (let i=0; i<el.length; i++) {
+                    if (el.options[i].value === ell)
+                        el.remove(i);
+                }
+        }
+
     }
     xhr.send(JSON.stringify(data));
 }
