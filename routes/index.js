@@ -296,8 +296,7 @@ async function downloadSong(id){
                 noCheckCertificates: true,
                 noWarnings: true,
                 preferFreeFormats: true,
-                geoBypass: true,
-                //proxy: "socks5://194.78.203.207:8111/",
+                geoVerificationProxy: "socks5://194.78.203.207:8111/",
                 addHeader: [
                     'referer:youtube.com',
                     'user-agent:googlebot'
@@ -307,12 +306,11 @@ async function downloadSong(id){
                 noCheckCertificates: true,
                 noWarnings: true,
                 preferFreeFormats: true,
+                geoVerificationProxy: "socks5://194.78.203.207:8111/",
                 addHeader: [
                     'referer:youtube.com',
                     'user-agent:googlebot'
                 ],
-                geoBypass: true,
-                //proxy: "socks5://194.78.203.207:8111/",
                 output:"tmp/songs/"+id+"X.mp3",
                 format: "bestaudio",
             }).then(process())
