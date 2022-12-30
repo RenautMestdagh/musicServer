@@ -276,8 +276,9 @@ async function getLinks() {
 
 async function downloadSong(id){
 
+    let metadata
     try{
-        let metadata = await youtubedl("https://music.youtube.com/watch?v="+id, {
+        metadata = await youtubedl("https://music.youtube.com/watch?v="+id, {
             dumpSingleJson: true,
             noCheckCertificates: true,
             noWarnings: true,
