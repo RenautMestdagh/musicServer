@@ -129,7 +129,7 @@ function executeAll(){
         setTimeout(executeAll, 600000)
     })))   // om de 10 minuten alles uitvoeren)))
 }
-//executeAll();
+executeAll();
 
 async function getLibrary() {
 
