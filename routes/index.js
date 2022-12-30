@@ -14,6 +14,9 @@ let jfPlaylists = {};
 let deleteFromPlaylistQueue = {};   // with jf IDs
 let lib;
 
+const maxAtSameTime = 15
+let currentAtSameTime = 0
+
 let playlistCollection = require('../playlists.json');
 
 let ffmpegPath
@@ -214,8 +217,6 @@ async function getLinks() {
     songs = songsN
 
     // download songs which are not in media folder
-    const maxAtSameTime = 10
-    let currentAtSameTime = 0
     for(const ytId of Object.keys(songs)){
         await new Promise(r => setTimeout(r, 100)); // beetje splitsen want er geraken er 2 uit de loop bij elke -
         if(!fs.existsSync(path.join(__dirname, '../tmp/songs/'+ytId+".mp3")) && !fs.existsSync(path.join(__dirname, '../tmp/songs/'+ytId+".webm")) && !fs.existsSync(libPath+ytId+".mp3")){
@@ -225,7 +226,6 @@ async function getLinks() {
             currentAtSameTime ++
             console.log("Currently downloading: "+ytId)
             downloadSong(ytId)
-            currentAtSameTime --
         }
     }
 
@@ -317,7 +317,7 @@ async function downloadSong(id){
 
         fs.unlinkSync('tmp/songs/' + metadata.id + '.mp3')
         fs.unlinkSync('tmp/img/' + metadata.id + '.jpg')
-
+        currentAtSameTime --
     })
 }
 
