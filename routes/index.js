@@ -339,10 +339,13 @@ async function downloadSong(id){
         ],
         output:"tmp/songs/"+id+"X.mp3",
         format: "bestaudio",
-    }).then(process())
+    }).then(function(){
+        console.log("AAAAAAAAAAAAAAAAAAAAA       "+id)
+        process()
+    })
 
     async function process(){
-
+        console.log("BBBBBBBBBBBBBBBBBBBB      "+id)
         await axios
             .get(metadata.thumbnail, {
                 responseType: "text",
