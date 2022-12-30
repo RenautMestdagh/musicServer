@@ -289,6 +289,32 @@ async function downloadSong(id){
     } catch (e) {
         console.log("VIDEO "+id+" FAILED TO DOWNLOAD")
         console.log(e)
+        // use proxy 194.78.203.207:8111
+        metadata = await youtubedl("https://music.youtube.com/watch?v="+id, {
+            dumpSingleJson: true,
+            noCheckCertificates: true,
+            noWarnings: true,
+            preferFreeFormats: true,
+            proxy: "194.78.203.207:8111",
+            addHeader: [
+                'referer:youtube.com',
+                'user-agent:googlebot'
+            ]
+        })
+        await youtubedl("https://music.youtube.com/watch?v="+id, {
+            noCheckCertificates: true,
+            noWarnings: true,
+            preferFreeFormats: true,
+            addHeader: [
+                'referer:youtube.com',
+                'user-agent:googlebot'
+            ],
+            proxy: "194.78.203.207:8111",
+            output:"tmp/songs/"+id+"X.mp3",
+            format: "bestaudio",
+        }).then(process())
+
+
         currentAtSameTime --
         return
     }
@@ -304,7 +330,9 @@ async function downloadSong(id){
         ],
         output:"tmp/songs/"+id+"X.mp3",
         format: "bestaudio",
-    }).then(async function(){
+    }).then(process())
+
+    async function process(){
 
         await axios
             .get(metadata.thumbnail, {
@@ -352,7 +380,7 @@ async function downloadSong(id){
         fs.unlinkSync('tmp/songs/' + metadata.id + '.mp3')
         fs.unlinkSync('tmp/img/' + metadata.id + '.jpg')
         currentAtSameTime --
-    })
+    }
 }
 
 function sameConfig(ell){
