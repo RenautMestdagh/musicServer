@@ -232,7 +232,6 @@ async function getLinks() {
 
     // download songs which are not in media folder
     for(const ytId of Object.keys(songs)){
-        await new Promise(r => setTimeout(r, 500)); // beetje splitsen want er geraken er 2 uit de loop bij elke -
         if(!fs.existsSync('tmp/songs/'+ytId+".mp3") && !fs.existsSync(libPath+ytId+".mp3")){
             while(currentAtSameTime >= maxAtSameTime){
                 await new Promise(r => setTimeout(r, 5000)); // 10 seconden wachten voor opnieuw check
@@ -248,6 +247,7 @@ async function getLinks() {
         const jfPlID = playlistCollectionContainsYT(el[0]).jfID
         const ytPlaylist = ytPlaylists[el[0]]
         const jfPlaylist = jfPlaylists[jfPlID]
+        console.log(jfPlaylist)
 
         if(ytPlaylist.length !== jfPlaylist.length)
             for(const el of ytPlaylist){
