@@ -290,40 +290,40 @@ async function downloadSong(id){
         console.log("VIDEO "+id+" FAILED TO DOWNLOAD")
         console.log(e)
         // use proxy 194.78.203.207:8111
-        try{
-            metadata = await youtubedl("https://music.youtube.com/watch?v="+id, {
-                dumpSingleJson: true,
-                noCheckCertificates: true,
-                noWarnings: true,
-                preferFreeFormats: true,
-                geoVerificationProxy: "socks5://194.78.203.207:8111/",
-                geoBypass: true,
-                geoBypassCountry: "BE",
-                addHeader: [
-                    'referer:youtube.com',
-                    'user-agent:googlebot'
-                ]
-            })
-            await youtubedl("https://music.youtube.com/watch?v="+id, {
-                noCheckCertificates: true,
-                noWarnings: true,
-                preferFreeFormats: true,
-                geoVerificationProxy: "socks5://194.78.203.207:8111/",
-                geoBypass: true,
-                geoBypassCountry: "BE",
-                addHeader: [
-                    'referer:youtube.com',
-                    'user-agent:googlebot'
-                ],
-                output:"tmp/songs/"+id+"X.mp3",
-                format: "bestaudio",
-            }).then(process())
-        } catch (e) {
-            currentAtSameTime --
-            console.log("PROXY FAILED")
-            console.log(e)
-            return
-        }
+        // try{
+        //     metadata = await youtubedl("https://music.youtube.com/watch?v="+id, {
+        //         dumpSingleJson: true,
+        //         noCheckCertificates: true,
+        //         noWarnings: true,
+        //         preferFreeFormats: true,
+        //         geoVerificationProxy: "socks5://194.78.203.207:8111/",
+        //         geoBypass: true,
+        //         geoBypassCountry: "BE",
+        //         addHeader: [
+        //             'referer:youtube.com',
+        //             'user-agent:googlebot'
+        //         ]
+        //     })
+        //     await youtubedl("https://music.youtube.com/watch?v="+id, {
+        //         noCheckCertificates: true,
+        //         noWarnings: true,
+        //         preferFreeFormats: true,
+        //         geoVerificationProxy: "socks5://194.78.203.207:8111/",
+        //         geoBypass: true,
+        //         geoBypassCountry: "BE",
+        //         addHeader: [
+        //             'referer:youtube.com',
+        //             'user-agent:googlebot'
+        //         ],
+        //         output:"tmp/songs/"+id+"X.mp3",
+        //         format: "bestaudio",
+        //     }).then(process())
+        // } catch (e) {
+        //     currentAtSameTime --
+        //     console.log("PROXY FAILED")
+        //     console.log(e)
+        //     return
+        // }
         currentAtSameTime --
         return
     }
@@ -379,7 +379,13 @@ async function downloadSong(id){
             toExecute += '" -metadata album="' + metadata.album.replaceAll('"','\\"').replaceAll(/'/g,'\\\'')
         toExecute += '" tmp/songs/' + id + ".mp3"
 
-        execSync(toExecute, {encoding: 'utf-8'});
+        try{
+            execSync(toExecute, {encoding: 'utf-8'});
+        } catch(e) {
+            console.log(e)
+            return
+        }
+
 
         fs.unlinkSync('tmp/songs/' + metadata.id + 'X.mp3')
 
