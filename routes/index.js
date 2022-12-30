@@ -184,6 +184,7 @@ async function getLinks() {
                 ytPlaylists[url][ytPlaylists[url].length] = el2.snippet.resourceId.videoId;
             }
         }
+        console.log("YouTube playlist "+el.name+" contains "+ytPlaylists[url].length+"items")
 
         //checken als er liedjes in JF playlist zitten die niet in yt playlist zitten
         let jfPlaylist = await axios.get(
