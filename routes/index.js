@@ -123,6 +123,7 @@ function executeAll(){
     busy=true
     update=false
     getLibrary().then(r => clearOldTmp().then(r => getLinks().then(function(){
+        console.log("EXECUTION LOOP COMPLETE: "+ new Date() )
         busy=false
         if(update)
             executeAll();
@@ -252,8 +253,8 @@ async function getLinks() {
                 if(jfId)
                     if(!jfLibraryContains(jfPlaylist, jfId)){
                         await axios.post(
-                            jfUrl+"/Playlists/"+jfPlID+"/Items?Ids="+jfId+"&api_key="+process.env.JF_API_KEY+"&userId="+process.env.JF_UID, {
-                                headers: { "Accept-Encoding": "gzip,deflate,compress" }
+                            jfUrl + "/Playlists/" + jfPlID + "/Items?Ids=" + jfId + "&api_key=" + process.env.JF_API_KEY + "&userId=" + process.env.JF_UID, {
+                                headers: {"Accept-Encoding": "gzip,deflate,compress"}
                             }
                         )
                         const objWithIdIndex = tmpLib.findIndex((obj) => obj.Id === jfId);
@@ -373,11 +374,11 @@ async function downloadSong(id){
         else
             toExecute += ' -metadata title="' + metadata.uploader.replaceAll('"','\\"').replaceAll(/'/g,'\'')
         if(metadata.artist)
-            toExecute += '" -metadata artist="' + metadata.artist.replaceAll('"','\\"').replaceAll(/'/g,'\\\'')
+            toExecute += '" -metadata artist="' + metadata.artist.replaceAll('"','\\"').replaceAll(/'/g,'\'')
         else
             toExecute += '" -metadata artist="' + metadata.fulltitle.replaceAll('"','\\"').replaceAll(/'/g,'\'')
         if(metadata.album)
-            toExecute += '" -metadata album="' + metadata.album.replaceAll('"','\\"').replaceAll(/'/g,'\\\'')
+            toExecute += '" -metadata album="' + metadata.album.replaceAll('"','\\"').replaceAll(/'/g,'\'')
         toExecute += '" tmp/songs/' + id + ".mp3"
 
         try{
