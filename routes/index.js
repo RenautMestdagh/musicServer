@@ -199,8 +199,12 @@ async function getLinks() {
             }
         }
         console.log("YouTube playlist \""+el.name+"\" contains "+ytPlaylists[url].length+" items")
+    }
+    songs = songsN
 
-        //checken als er liedjes in JF playlist zitten die niet in yt playlist zitten
+    for(let el of playlistCollection.playlists) {
+
+        //checken als er liedjes in JF playlist zitten die niet in een yt playlist zitten
         let jfPlaylist = await axios.get(
             jfUrl+"/Playlists/"+el.jfID+"/Items?api_key="+process.env.JF_API_KEY+"&userId="+process.env.JF_UID+"&Fields=Path", {
                 headers: { "Accept-Encoding": "gzip,deflate,compress" }
@@ -241,8 +245,8 @@ async function getLinks() {
                         tmpLib.splice(objWithIdIndex, 1);
                 }
         }
+
     }
-    songs = songsN
 
     // download songs which are not in media folder
     for(const ytId of Object.keys(songs)){
@@ -422,7 +426,7 @@ function sameConfig(ell){
     return false
 }
 function YTPlaylistsContains(playlists, ytId) {
-    for(const ell of playlists)
+    for(const ell of Object.values(playlists))
         for(const el of ell)
             if(ytId === el)
                 return true
