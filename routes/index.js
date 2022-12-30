@@ -290,31 +290,38 @@ async function downloadSong(id){
         console.log("VIDEO "+id+" FAILED TO DOWNLOAD")
         console.log(e)
         // use proxy 194.78.203.207:8111
-        metadata = await youtubedl("https://music.youtube.com/watch?v="+id, {
-            dumpSingleJson: true,
-            noCheckCertificates: true,
-            noWarnings: true,
-            preferFreeFormats: true,
-            proxy: "socks5://194.78.203.207:8111/",
-            addHeader: [
-                'referer:youtube.com',
-                'user-agent:googlebot'
-            ]
-        })
-        await youtubedl("https://music.youtube.com/watch?v="+id, {
-            noCheckCertificates: true,
-            noWarnings: true,
-            preferFreeFormats: true,
-            addHeader: [
-                'referer:youtube.com',
-                'user-agent:googlebot'
-            ],
-            proxy: "socks5://194.78.203.207:8111/",
-            output:"tmp/songs/"+id+"X.mp3",
-            format: "bestaudio",
-        }).then(process())
-
-
+        try{
+            metadata = await youtubedl("https://music.youtube.com/watch?v="+id, {
+                dumpSingleJson: true,
+                noCheckCertificates: true,
+                noWarnings: true,
+                preferFreeFormats: true,
+                geoBypass: true,
+                //proxy: "socks5://194.78.203.207:8111/",
+                addHeader: [
+                    'referer:youtube.com',
+                    'user-agent:googlebot'
+                ]
+            })
+            await youtubedl("https://music.youtube.com/watch?v="+id, {
+                noCheckCertificates: true,
+                noWarnings: true,
+                preferFreeFormats: true,
+                addHeader: [
+                    'referer:youtube.com',
+                    'user-agent:googlebot'
+                ],
+                geoBypass: true,
+                //proxy: "socks5://194.78.203.207:8111/",
+                output:"tmp/songs/"+id+"X.mp3",
+                format: "bestaudio",
+            }).then(process())
+        } catch (e) {
+            currentAtSameTime --
+            console.log("PROXY FAILED")
+            console.log(e)
+            return
+        }
         currentAtSameTime --
         return
     }
