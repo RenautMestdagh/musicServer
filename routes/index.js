@@ -31,8 +31,11 @@ if (process.env.NODE_ENV === "production"){
     jfUrl = "http://localhost:8096"
 } else {
     ffmpegPath = path.join(__dirname, '../ffmpeg.exe');
-    libPath = "/mnt/c/Users/renau/OneDrive/Muziek/"
     jfUrl = "https://renautmusic.ml"
+    if(process.platform === "linux")
+        libPath = "/mnt/c/Users/renau/OneDrive/Muziek/"
+    else
+        libPath = "/Users/renau/OneDrive/Muziek/"
 }
 
 /* GET home page. */
@@ -119,17 +122,21 @@ router.post('/', function(req, res) {
     verwerk()
 });
 
-function executeAll(){
+async function executeAll(){
     console.log("EXECUTION LOOP STARTED: "+ new Date() )
     busy=true
     update=false
-    getLibrary().then(r => clearOldTmp().then(r => getLinks().then(function(){
-        console.log("EXECUTION LOOP COMPLETE: "+ new Date() )
-        busy=false
-        if(update)
-            executeAll();
-        setTimeout(executeAll, 600000)
-    })))   // om de 10 minuten alles uitvoeren)))
+    await getLibrary().then(async function(){
+        clearOldTmp().then(async function(){
+            getLinks().then(function(){
+                console.log("EXECUTION LOOP COMPLETE: "+ new Date() )
+                busy=false
+                if(update)
+                    executeAll();
+                setTimeout(executeAll, 600000)
+            })
+        })   // om de 10 minuten alles uitvoeren)))
+    })
 }
 executeAll();
 
@@ -158,7 +165,7 @@ async function getLinks() {
 
     ytPlaylists = {};
     let songsN = {};
-    const tmpLib = lib
+    const tmpLib = lib.slice(0);
 
     for(let el of playlistCollection.playlists) {
         let url = el.ytID
