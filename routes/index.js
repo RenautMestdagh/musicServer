@@ -295,7 +295,7 @@ async function downloadSong(id){
             noCheckCertificates: true,
             noWarnings: true,
             preferFreeFormats: true,
-            proxy: "194.78.203.207:8111",
+            proxy: "socks5://194.78.203.207:8111/",
             addHeader: [
                 'referer:youtube.com',
                 'user-agent:googlebot'
@@ -309,7 +309,7 @@ async function downloadSong(id){
                 'referer:youtube.com',
                 'user-agent:googlebot'
             ],
-            proxy: "194.78.203.207:8111",
+            proxy: "socks5://194.78.203.207:8111/",
             output:"tmp/songs/"+id+"X.mp3",
             format: "bestaudio",
         }).then(process())
