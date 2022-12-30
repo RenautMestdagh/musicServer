@@ -224,7 +224,7 @@ async function getLinks() {
             }
             currentAtSameTime ++
             console.log("Currently downloading: "+ytId)
-            await downloadSong(ytId)
+            downloadSong(ytId)
             currentAtSameTime --
         }
     }
