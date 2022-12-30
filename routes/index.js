@@ -276,16 +276,23 @@ async function getLinks() {
 
 async function downloadSong(id){
 
-    let metadata = await youtubedl("https://music.youtube.com/watch?v="+id, {
-        dumpSingleJson: true,
-        noCheckCertificates: true,
-        noWarnings: true,
-        preferFreeFormats: true,
-        addHeader: [
-            'referer:youtube.com',
-            'user-agent:googlebot'
-        ]
-    })
+    try{
+        let metadata = await youtubedl("https://music.youtube.com/watch?v="+id, {
+            dumpSingleJson: true,
+            noCheckCertificates: true,
+            noWarnings: true,
+            preferFreeFormats: true,
+            addHeader: [
+                'referer:youtube.com',
+                'user-agent:googlebot'
+            ]
+        })
+    } catch (e) {
+        console.log("VIDEO "+id+" FAILED TO DOWNLOAD")
+        console.log(e)
+        return
+    }
+
 
     await youtubedl("https://music.youtube.com/watch?v="+id, {
         noCheckCertificates: true,
