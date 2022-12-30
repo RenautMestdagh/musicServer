@@ -129,7 +129,7 @@ function executeAll(){
         setTimeout(executeAll, 600000)
     })))   // om de 10 minuten alles uitvoeren)))
 }
-//executeAll();
+executeAll();
 
 async function getLibrary() {
 
@@ -273,7 +273,7 @@ async function getLinks() {
         } catch(e){}
     }
 }
-downloadSong("vY6B8uj1plY")
+
 async function downloadSong(id){
 
     let metadata
@@ -326,9 +326,9 @@ async function downloadSong(id){
             })
 
         execSync('ffmpeg -i ' + 'tmp/songs/' + metadata.id + 'X.mp3 -id3v2_version 3 ' +
-            ' -metadata title="' + escape(metadata.track) +
-            '" -metadata artist="' + escape(metadata.artist) +
-            '" -metadata album="' + escape(metadata.album) +
+            ' -metadata title="' + metadata.track.replace('"','\"').replace(/'/g,'\'') +
+            '" -metadata artist="' + metadata.artist.replace('"','\"').replace(/'/g,'\'') +
+            '" -metadata album="' + metadata.album.replace('"','\"').replace(/'/g,'\'') +
             '" tmp/songs/' + id + ".mp3", {encoding: 'utf-8'});
 
         fs.unlinkSync('tmp/songs/' + metadata.id + 'X.mp3')
