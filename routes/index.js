@@ -329,7 +329,7 @@ async function downloadSong(id){
         //             '" -metadata album="' + metadata.album +
         //             '" tmp/songs/' + id + ".mp3"
 
-        let toExecute = 'ffmpeg -i ' + 'tmp/songs/' + metadata.id + 'X.mp3 -id3v2_version 3 '
+        let toExecute = 'ffmpeg -hide_banner -loglevel error -i ' + 'tmp/songs/' + metadata.id + 'X.mp3 -id3v2_version 3 '
         if(metadata.track)
             toExecute += ' -metadata title="' + metadata.track.replaceAll('"','\\"').replaceAll(/'/g,'\'')
         else
@@ -346,7 +346,7 @@ async function downloadSong(id){
 
         fs.unlinkSync('tmp/songs/' + metadata.id + 'X.mp3')
 
-        execSync('ffmpeg -i tmp/songs/' + id + ".mp3"+' -i tmp/img/' + id + ".jpg -map 0:0 -map 1:0 -c copy -id3v2_version 3 " +
+        execSync('ffmpeg -hide_banner -loglevel error -i tmp/songs/' + id + ".mp3"+' -i tmp/img/' + id + ".jpg -map 0:0 -map 1:0 -c copy -id3v2_version 3 " +
             "-metadata:s:v title=\"Album cover\" -metadata:s:v comment=\"Cover (front)\" "+libPath + id + ".mp3", { encoding: 'utf-8' });  // the default is 'buffer'
 
         fs.unlinkSync('tmp/songs/' + metadata.id + '.mp3')
