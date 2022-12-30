@@ -120,6 +120,7 @@ router.post('/', function(req, res) {
 });
 
 function executeAll(){
+    console.log("EXECUTION LOOP STARTED: "+ new Date() )
     busy=true
     update=false
     getLibrary().then(r => clearOldTmp().then(r => getLinks().then(function(){
