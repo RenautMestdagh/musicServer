@@ -8,7 +8,7 @@ const youtubedl = require('youtube-dl-exec');
 const {execSync} = require("child_process");
 const sharp = require('sharp');
 
-let songs = {};
+let songs = new Set();
 let ytPlaylists = {};
 let jfPlaylists = {};
 let deleteFromPlaylistQueue = {};   // with jf IDs
@@ -171,12 +171,12 @@ async function clearOldTmp() {
 async function getLinks() {
 
     ytPlaylists = {};
-    let songsN = {};
+    let songsN = new Set();
     const tmpLib = lib.slice(0);
 
     for(let el of playlistCollection.playlists) {
         let url = el.ytID
-        ytPlaylists[url] = []
+        ytPlaylists[url] = new Set()
         let response = {}
         response.data  ={};
         response.data.nextPageToken = "A"
@@ -193,9 +193,9 @@ async function getLinks() {
             })
 
             for(let el2 of response.data.items){
-                songsN[el2.snippet.resourceId.videoId] = {};
-                songsN[el2.snippet.resourceId.videoId].yt1=el2
-                ytPlaylists[url][ytPlaylists[url].length] = el2.snippet.resourceId.videoId;
+                songsN.add(el2.snippet.resourceId.videoId)
+                //songsN[el2.snippet.resourceId.videoId].yt1=el2
+                ytPlaylists[url].add(el2.snippet.resourceId.videoId);
             }
         }
         console.log("YouTube playlist \""+el.name+"\" contains "+ytPlaylists[url].length+" items")
@@ -249,7 +249,7 @@ async function getLinks() {
     }
 
     // download songs which are not in media folder
-    for(const ytId of Object.keys(songs)){
+    for(const ytId of songs){
         if(!fs.existsSync('tmp/songs/'+ytId+".mp3") && !fs.existsSync(libPath+ytId+".mp3")){
             while(currentAtSameTime >= maxAtSameTime){
                 await new Promise(r => setTimeout(r, randomIntFromInterval(5000, 10000))); // 10 seconden wachten voor opnieuw check
@@ -261,9 +261,9 @@ async function getLinks() {
     }
 
     // check for songs in jf library which are not in their playlists
-    for(const el of Object.entries(ytPlaylists)){
-        const jfPlID = playlistCollectionContainsYT(el[0]).jfID
-        const ytPlaylist = ytPlaylists[el[0]]
+    for(const el of Object.keys(ytPlaylists)){
+        const jfPlID = playlistCollectionContainsYT(el).jfID
+        const ytPlaylist = ytPlaylists[el]
         const jfPlaylist = jfPlaylists[jfPlID]
 
         if(ytPlaylist.length !== jfPlaylist.length)
