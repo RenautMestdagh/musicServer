@@ -198,7 +198,7 @@ async function getLinks() {
                 ytPlaylists[url].add(el2.snippet.resourceId.videoId);
             }
         }
-        console.log("YouTube playlist \""+el.name+"\" contains "+ytPlaylists[url].length+" items")
+        console.log("YouTube playlist \""+el.name+"\" contains "+ytPlaylists[url].size+" items")
     }
     songs = songsN
 
