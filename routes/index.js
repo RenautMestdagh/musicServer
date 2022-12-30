@@ -288,7 +288,7 @@ async function downloadSong(id){
         })
     } catch (e) {
         console.log("VIDEO "+id+" FAILED TO DOWNLOAD")
-        console.log(e)
+        // console.log(e)
         // use proxy 194.78.203.207:8111
         // try{
         //     metadata = await youtubedl("https://music.youtube.com/watch?v="+id, {
@@ -340,12 +340,10 @@ async function downloadSong(id){
         output:"tmp/songs/"+id+"X.mp3",
         format: "bestaudio",
     }).then(function(){
-        console.log("AAAAAAAAAAAAAAAAAAAAA       "+id)
         process()
     })
 
     async function process(){
-        console.log("BBBBBBBBBBBBBBBBBBBB      "+id)
         await axios
             .get(metadata.thumbnail, {
                 responseType: "text",
