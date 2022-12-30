@@ -297,6 +297,8 @@ async function downloadSong(id){
                 noWarnings: true,
                 preferFreeFormats: true,
                 geoVerificationProxy: "socks5://194.78.203.207:8111/",
+                geoBypass: true,
+                geoBypassCountry: "BE",
                 addHeader: [
                     'referer:youtube.com',
                     'user-agent:googlebot'
@@ -307,6 +309,8 @@ async function downloadSong(id){
                 noWarnings: true,
                 preferFreeFormats: true,
                 geoVerificationProxy: "socks5://194.78.203.207:8111/",
+                geoBypass: true,
+                geoBypassCountry: "BE",
                 addHeader: [
                     'referer:youtube.com',
                     'user-agent:googlebot'
