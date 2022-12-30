@@ -291,6 +291,7 @@ async function downloadSong(id){
     } catch (e) {
         console.log("VIDEO "+id+" FAILED TO DOWNLOAD")
         console.log(e)
+        currentAtSameTime --
         return
     }
 
