@@ -231,7 +231,6 @@ async function getLinks() {
     for(const ytId of Object.keys(songs)){
         await new Promise(r => setTimeout(r, 500)); // beetje splitsen want er geraken er 2 uit de loop bij elke -
         if(!fs.existsSync('tmp/songs/'+ytId+".mp3") && !fs.existsSync(libPath+ytId+".mp3")){
-            console.log(ytId+"   "+fs.existsSync('tmp/songs/'+ytId+".mp3")+"   "+fs.existsSync(libPath+ytId+".mp3"))
             while(currentAtSameTime >= maxAtSameTime){
                 await new Promise(r => setTimeout(r, 5000)); // 10 seconden wachten voor opnieuw check
             }
@@ -331,7 +330,7 @@ async function downloadSong(id){
         //             '" -metadata album="' + metadata.album +
         //             '" tmp/songs/' + id + ".mp3"
 
-        let toExecute = 'ffmpeg -i ' + 'tmp/songs/' + metadata.id + 'X.mp3 -id3v2_version 3 '
+        let toExecute = 'ffmpeg -y -i ' + 'tmp/songs/' + metadata.id + 'X.mp3 -id3v2_version 3 '
         if(metadata.track)
             toExecute += ' -metadata title="' + metadata.track.replace('"','\"').replace(/'/g,'\'')
         else
