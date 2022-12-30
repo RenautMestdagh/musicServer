@@ -332,15 +332,15 @@ async function downloadSong(id){
         //             '" tmp/songs/' + id + ".mp3"
 
         let toExecute = 'ffmpeg -i ' + 'tmp/songs/' + metadata.id + 'X.mp3 -id3v2_version 3 '
-        if(metadata.track.replace('"','\"').replace(/'/g,'\''))
+        if(metadata.track)
             toExecute += ' -metadata title="' + metadata.track.replace('"','\"').replace(/'/g,'\'')
         else
             toExecute += ' -metadata title="' + metadata.uploader.replace('"','\"').replace(/'/g,'\'')
-        if(metadata.artist.replace('"','\"').replace(/'/g,'\''))
+        if(metadata.artist)
             toExecute += '" -metadata artist="' + metadata.artist.replace('"','\"').replace(/'/g,'\'')
         else
             toExecute += '" -metadata artist="' + metadata.fulltitle.replace('"','\"').replace(/'/g,'\'')
-        if(metadata.album.replace('"','\"').replace(/'/g,'\''))
+        if(metadata.album)
             toExecute += '" -metadata album="' + metadata.album.replace('"','\"').replace(/'/g,'\'')
         toExecute += '" tmp/songs/' + id + ".mp3"
 
