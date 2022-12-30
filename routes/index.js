@@ -272,7 +272,6 @@ async function getLinks() {
         } catch(e){}
     }
 }
-downloadSong("9PNV6Lg_ajA")
 async function downloadSong(id){
 
     let metadata
@@ -332,22 +331,22 @@ async function downloadSong(id){
 
         let toExecute = 'ffmpeg -i ' + 'tmp/songs/' + metadata.id + 'X.mp3 -id3v2_version 3 '
         if(metadata.track)
-            toExecute += ' -metadata title="' + metadata.track.replace('"','\"').replace(/'/g,'\'')
+            toExecute += ' -metadata title="' + metadata.track.replaceAll('"','\\"').replaceAll(/'/g,'\'')
         else
-            toExecute += ' -metadata title="' + metadata.uploader.replace('"','\"').replace(/'/g,'\'')
+            toExecute += ' -metadata title="' + metadata.uploader.replaceAll('"','\\"').replaceAll(/'/g,'\'')
         if(metadata.artist)
-            toExecute += '" -metadata artist="' + metadata.artist.replace('"','\"').replace(/'/g,'\'')
+            toExecute += '" -metadata artist="' + metadata.artist.replaceAll('"','\\"').replaceAll(/'/g,'\\\'')
         else
-            toExecute += '" -metadata artist="' + metadata.fulltitle.replace('"','\"').replace(/'/g,'\'')
+            toExecute += '" -metadata artist="' + metadata.fulltitle.replaceAll('"','\\"').replaceAll(/'/g,'\'')
         if(metadata.album)
-            toExecute += '" -metadata album="' + metadata.album.replace('"','\"').replace(/'/g,'\'')
+            toExecute += '" -metadata album="' + metadata.album.replaceAll('"','\\"').replaceAll(/'/g,'\\\'')
         toExecute += '" tmp/songs/' + id + ".mp3"
 
         execSync(toExecute, {encoding: 'utf-8'});
 
         fs.unlinkSync('tmp/songs/' + metadata.id + 'X.mp3')
 
-        execSync('ffmpeg -y -i tmp/songs/' + id + ".mp3"+' -i tmp/img/' + id + ".jpg -map 0:0 -map 1:0 -c copy -id3v2_version 3 " +
+        execSync('ffmpeg -i tmp/songs/' + id + ".mp3"+' -i tmp/img/' + id + ".jpg -map 0:0 -map 1:0 -c copy -id3v2_version 3 " +
             "-metadata:s:v title=\"Album cover\" -metadata:s:v comment=\"Cover (front)\" "+libPath + id + ".mp3", { encoding: 'utf-8' });  // the default is 'buffer'
 
         fs.unlinkSync('tmp/songs/' + metadata.id + '.mp3')
