@@ -79,7 +79,7 @@ router.post('/', function(req, res) {
 
             } else {    // naam jf playlist aanpassen
 
-                //      NORMAAL ZO MAAR JELLYFIN WIL GEEN LIEDJES VERWIJDEREN UIT PLAYLIST -> NU voegt ie de 2 playlists samen
+                //      NORMAAL ZO MAAR JELLYFIN WIL GEEN LIEDJES VERWIJDEREN UIT PLAYLIST -> NU voegt ie de 2 playlists samen (loopt fout bij regel 220)
                 if(playlistObj.name!==el.plS)   // als niet de zelfde naam (yt playlist ID is veranderd)
                     await axios.post(
                         jfUrl+"/Items/"+playlistObj.jfID+"?api_key="+process.env.JF_API_KEY, {
@@ -215,14 +215,13 @@ async function getLinks() {
 
         for(const value of Object.values(jfPlaylist.data.Items)) {
             let ytId = jfToYtId(jfPlaylist.data.Items, value.Id)
-            if (!YTPlaylistContains(ytPlaylists[el.ytID], ytId) && fs.existsSync(libPath + ytId + ".mp3")){  // remove from this playlist
+            if (!YTPlaylistContains(ytPlaylists[el.ytID], ytId)){  // remove from this playlist
                 //                   JELLYFIN DOET MOEILIJK EN WIL DIT NIET DOEN
                 await axios.delete(
                     jfUrl + "/Playlists/" + el.jfID + "/Items?EntryIds=" + value.Id + "&api_key=" + process.env.JF_API_KEY + "&userId=" + process.env.JF_UID, {
                         headers: {"Accept-Encoding": "gzip,deflate,br"}
                     }
                 )
-                console.log(jfUrl+"/Playlists/"+el.jfID+"/Items?EntryIds="+value.Id+"&api_key="+process.env.JF_API_KEY+"&userId="+process.env.JF_UID)
                 //deleteFromPlaylistQueue[value.Id] = true
             }
             if(!YTPlaylistsContains(ytPlaylists, ytId) && fs.existsSync(libPath+ytId+".mp3") ) // not in a single playlist
