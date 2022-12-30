@@ -14,8 +14,10 @@ let jfPlaylists = {};
 let deleteFromPlaylistQueue = {};   // with jf IDs
 let lib;
 
-const maxAtSameTime = 15
+const maxAtSameTime = 10
 let currentAtSameTime = 0
+let busy = false
+let update = false
 
 let playlistCollection = require('../playlists.json');
 
@@ -109,13 +111,23 @@ router.post('/', function(req, res) {
         playlistCollection = {playlists:newPlaylists}
 
         res.send(JSON.stringify(deleted))
-        executeAll();
+        if(!busy)
+            executeAll();
+        else
+            update=true
     }
     verwerk()
 });
 
 function executeAll(){
-    getLibrary().then(r => clearOldTmp().then(r => getLinks().then(r => setTimeout(executeAll, 600000))))   // om de 10 minuten alles uitvoeren)))
+    busy=true
+    update=false
+    getLibrary().then(r => clearOldTmp().then(r => getLinks().then(function(){
+        busy=false
+        if(update)
+            executeAll();
+        setTimeout(executeAll, 600000)
+    })))   // om de 10 minuten alles uitvoeren)))
 }
 executeAll();
 
@@ -218,10 +230,10 @@ async function getLinks() {
 
     // download songs which are not in media folder
     for(const ytId of Object.keys(songs)){
-        await new Promise(r => setTimeout(r, 100)); // beetje splitsen want er geraken er 2 uit de loop bij elke -
-        if(!fs.existsSync(path.join(__dirname, '../tmp/songs/'+ytId+".mp3")) && !fs.existsSync(path.join(__dirname, '../tmp/songs/'+ytId+".webm")) && !fs.existsSync(libPath+ytId+".mp3")){
+        await new Promise(r => setTimeout(r, 500)); // beetje splitsen want er geraken er 2 uit de loop bij elke -
+        if(!fs.existsSync(path.join(__dirname, '../tmp/songs/'+ytId+".mp3")) && !fs.existsSync(libPath+ytId+".mp3")){
             while(currentAtSameTime >= maxAtSameTime){
-                await new Promise(r => setTimeout(r, 10000)); // 10 seconden wachten voor opnieuw check
+                await new Promise(r => setTimeout(r, 5000)); // 10 seconden wachten voor opnieuw check
             }
             currentAtSameTime ++
             console.log("Currently downloading: "+ytId)
