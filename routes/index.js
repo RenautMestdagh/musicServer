@@ -110,6 +110,13 @@ router.post('/', function(req, res) {
 
         }
 
+        newPlaylists.sort( function( a, b ) {
+            a = a.name.toLowerCase();
+            b = b.name.toLowerCase();
+
+            return a < b ? -1 : a > b ? 1 : 0;
+        });
+
         fs.writeFileSync(path.join(__dirname, '../playlists.json'), "{\"playlists\":"+JSON.stringify(newPlaylists)+"}");
         playlistCollection = {playlists:newPlaylists}
 
@@ -203,7 +210,7 @@ async function getLinks() {
 
         for(const value of Object.values(jfPlaylist.data.Items)){
             let ytId = jfToYtId(jfPlaylist.data.Items, value.Id)
-            if(!YTPlaylistContains(ytPlaylists[url], ytId) && fs.existsSync(libPath+ytId+".mp3") ) { // and not in library
+            if(!YTPlaylistsContains(ytPlaylists, ytId) && fs.existsSync(libPath+ytId+".mp3") ) { // and not in library
                 deleteFromPlaylistQueue[value.Id] = true
                 fs.unlinkSync(libPath+ytId + ".mp3");
             }
@@ -414,10 +421,11 @@ function sameConfig(ell){
             return true;
     return false
 }
-function YTPlaylistContains(playlist, ytId) {
-    for(const el of playlist)
-        if(ytId === el)
-            return true
+function YTPlaylistsContains(playlists, ytId) {
+    for(const ell of playlists)
+        for(const el of ell)
+            if(ytId === el)
+                return true
     return false;
 }
 function jfLibraryContains(library, jfId){
