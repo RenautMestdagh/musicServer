@@ -79,7 +79,8 @@ router.post('/', function(req, res) {
 
             } else {    // naam jf playlist aanpassen
 
-                if(playlistObj.name!==el.plS)
+                //      NORMAAL ZO MAAR JELLYFIN WIL GEEN LIEDJES VERWIJDEREN UIT PLAYLIST -> NU voegt ie de 2 playlists samen
+                if(playlistObj.name!==el.plS)   // als niet de zelfde naam (yt playlist ID is veranderd)
                     await axios.post(
                         jfUrl+"/Items/"+playlistObj.jfID+"?api_key="+process.env.JF_API_KEY, {
                             "Name": el.plS,
@@ -212,28 +213,36 @@ async function getLinks() {
         )
         jfPlaylists[el.jfID] = jfPlaylist.data.Items
 
-        for(const value of Object.values(jfPlaylist.data.Items)){
+        for(const value of Object.values(jfPlaylist.data.Items)) {
             let ytId = jfToYtId(jfPlaylist.data.Items, value.Id)
-            if(!YTPlaylistsContains(ytPlaylists, ytId) && fs.existsSync(libPath+ytId+".mp3") ) { // and not in library
-                deleteFromPlaylistQueue[value.Id] = true
-                fs.unlinkSync(libPath+ytId + ".mp3");
-            }
-        }
-        for(const key of Object.keys(deleteFromPlaylistQueue)){
-            if(!jfLibraryContains(lib, key)){    // kunt pas uit playlist verwijderen alst ni meer in JF library zit, lol
+            if (!YTPlaylistContains(ytPlaylists[el.ytID], ytId) && fs.existsSync(libPath + ytId + ".mp3")){  // remove from this playlist
+                //                   JELLYFIN DOET MOEILIJK EN WIL DIT NIET DOEN
                 await axios.delete(
-                    jfUrl+"/Playlists/"+el.jfID+"/Items?EntryIds="+key+"&api_key="+process.env.JF_API_KEY+"&userId="+process.env.JF_UID, {
-                        headers: { "Accept-Encoding": "gzip,deflate,br" }
+                    jfUrl + "/Playlists/" + el.jfID + "/Items?EntryIds=" + value.Id + "&api_key=" + process.env.JF_API_KEY + "&userId=" + process.env.JF_UID, {
+                        headers: {"Accept-Encoding": "gzip,deflate,br"}
                     }
                 )
-                delete deleteFromPlaylistQueue[key]
-            } else {
-                const objWithIdIndex = tmpLib.findIndex((obj) => obj.Id === key);
-
-                if (objWithIdIndex > -1)
-                    tmpLib.splice(objWithIdIndex, 1);
+                console.log(jfUrl+"/Playlists/"+el.jfID+"/Items?EntryIds="+value.Id+"&api_key="+process.env.JF_API_KEY+"&userId="+process.env.JF_UID)
+                //deleteFromPlaylistQueue[value.Id] = true
             }
+            if(!YTPlaylistsContains(ytPlaylists, ytId) && fs.existsSync(libPath+ytId+".mp3") ) // not in a single playlist
+                fs.unlinkSync(libPath+ytId + ".mp3");
         }
+        // for(const key of Object.keys(deleteFromPlaylistQueue)){
+        //     if(!jfLibraryContains(lib, key)){    // kunt pas uit playlist verwijderen alst ni meer in JF library zit, lol
+        //         await axios.delete(
+        //             jfUrl+"/Playlists/"+el.jfID+"/Items?EntryIds="+key+"&api_key="+process.env.JF_API_KEY+"&userId="+process.env.JF_UID, {
+        //                 headers: { "Accept-Encoding": "gzip,deflate,br" }
+        //             }
+        //         )
+        //         delete deleteFromPlaylistQueue[key]
+        //     } else {
+        //         const objWithIdIndex = tmpLib.findIndex((obj) => obj.Id === key);
+        //
+        //         if (objWithIdIndex > -1)
+        //             tmpLib.splice(objWithIdIndex, 1);
+        //     }
+        // }
 
         // check for songs in jf library without playlist
         for(const jfSong of jfPlaylists[el.jfID]){
@@ -425,9 +434,15 @@ function sameConfig(ell){
             return true;
     return false
 }
+function YTPlaylistContains(playlist, ytId) {
+    for(const el of playlist.values())
+        if(ytId === el)
+            return true
+    return false;
+}
 function YTPlaylistsContains(playlists, ytId) {
     for(const ell of Object.values(playlists))
-        for(const el of ell)
+        for(const el of ell.values())
             if(ytId === el)
                 return true
     return false;
