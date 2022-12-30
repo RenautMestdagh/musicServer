@@ -18,6 +18,7 @@ const maxAtSameTime = 10
 let currentAtSameTime = 0
 let busy = false
 let update = false
+let toExecute = false
 
 let playlistCollection = require('../playlists.json');
 
@@ -41,6 +42,14 @@ if (process.env.NODE_ENV === "production"){
 /* GET home page. */
 router.get('/', function(req, res) {
     res.render('index', { title: 'Playlist config', data: JSON.stringify(playlistCollection) });
+
+    if(toExecute){
+        toExecute = false
+        if(!busy)
+            executeAll();
+        else
+            update=true
+    }
 });
 
 router.post('/', function(req, res) {
@@ -121,11 +130,8 @@ router.post('/', function(req, res) {
         fs.writeFileSync(path.join(__dirname, '../playlists.json'), "{\"playlists\":"+JSON.stringify(newPlaylists)+"}");
         playlistCollection = {playlists:newPlaylists}
 
-        res.send(JSON.stringify(deleted))
-        if(!busy)
-            executeAll();
-        else
-            update=true
+        toExecute = true
+        res.send("k")
     }
     verwerk()
 });

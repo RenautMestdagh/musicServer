@@ -1,4 +1,4 @@
-const data = JSON.parse(document.getElementsByTagName("data")[0].innerText).playlists;
+let data = JSON.parse(document.getElementsByTagName("data")[0].innerText).playlists;
 data.push({});
 let last=false
 
@@ -102,7 +102,7 @@ function removeNode(e){
 function submit(){
     document.getElementsByTagName("p")[0].innerText = ""
     const input = document.getElementsByClassName("playlistEl")
-    const data = []
+    const daata = []
     for(const el of input){
         if(el.nextSibling === document.getElementsByTagName("button")[0])
             break
@@ -118,12 +118,12 @@ function submit(){
         if(ID.length!==34 || plS==="")
             return invalid()
         else
-            data.push({ID, plS, nieuw})
+            daata.push({ID, plS, nieuw})
     }
 
     const IDs = []
     const plS = []
-    for (const el of data){
+    for (const el of daata){
         IDs.push(el.ID)
         plS.push(el.plS)
     }
@@ -144,42 +144,10 @@ function submit(){
     xhr.onload = function () {
         if(xhr.responseText === "duplicates")
             return invalid()
-
-        document.getElementsByTagName("p")[0].value = "saved"
-
-        const inputEl = document.getElementsByTagName("input")
-        for (const el of inputEl){
-            if(el.classList.contains("ytIdInput"))
-                el.disabled = false
-            if(el.previousSibling.value === "NIEUWE PLAYLIST" && el.value !== ""){
-                let optionValues = [...el.previousSibling.options].map(o => o.value)
-                if(!optionValues.includes(el.value)){
-                    for(const el2 of document.getElementsByTagName("select")){
-                        const opt = document.createElement('option');
-                        opt.value = el.value;
-                        opt.innerHTML = el.value;
-                        el2.insertBefore(opt, el2.lastChild);
-                    }
-
-                }
-                el.previousSibling.value = el.value;
-                el.value = ""
-            } else if (el.previousSibling.value === "NIEUWE PLAYLIST")
-                el.disabled = false
-        }
-
-        const selectEl = document.getElementsByTagName("select")
-        for (const el of selectEl){
-            el.disabled = false
-            for(const ell of JSON.parse(xhr.response))
-                for (let i=0; i<el.length; i++) {
-                    if (el.options[i].value === ell)
-                        el.remove(i);
-                }
-        }
-
+        else
+            location.reload()
     }
-    xhr.send(JSON.stringify(data));
+    xhr.send(JSON.stringify(daata));
 }
 
 function invalid(){
