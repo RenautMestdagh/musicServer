@@ -32,12 +32,12 @@ app.set('view engine', 'pug');
 
 // http -> https
 app.enable('trust proxy');
-app.use(function (req, res, next) {
-    if (req.app.get('env') === "production")
-        req.secure ? next() : res.redirect('https://' + req.headers.host + req.url)
-    else
-        next();
-})
+// app.use(function (req, res, next) {
+//     if (req.app.get('env') === "production")
+//         req.secure ? next() : res.redirect('https://' + req.headers.host + req.url)
+//     else
+//         next();
+// })
 
 // www. X
 app.get( '/*', function(req, res, next){
