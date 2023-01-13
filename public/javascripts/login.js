@@ -34,7 +34,7 @@ function submitted(event) {
     }
 
     let xhr = new XMLHttpRequest();
-    xhr.open('POST', '/login');
+    xhr.open('POST', '/ytconfig/login');
     xhr.setRequestHeader('content-type', 'application/json');
 
     xhr.onload = function () {
@@ -47,7 +47,7 @@ function submitted(event) {
             pass.value = ''
             document.getElementById('passNCorrect').style.display = 'unset'
         } else {
-            window.location = "/"
+            window.location = "/ytconfig"
         }
     }
 

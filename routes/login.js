@@ -3,7 +3,7 @@ const router = express.Router();
 
 const redirectEdit = (req, res, next) =>{
   if(req.session.userId)
-    return res.redirect('/')
+    return res.redirect('/ytconfig')
   next()
 }
 

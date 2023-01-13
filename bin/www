@@ -3,15 +3,9 @@
 /**
  * Module dependencies.
  */
-const app = require('../app').app;
+const app = require('../app');
 const debug = require('debug')('project:server');
-
-const httpsServer = require('../app').httpsServer;
-// if (process.env.NODE_ENV === "production"){
-//   httpsServer.listen('6969');
-//   httpsServer.on('error', onError);
-//   httpsServer.on('listening', onListening);
-// }
+const http = require('http');
 
 /**
  * Get port from environment and store in Express.
@@ -22,7 +16,7 @@ app.set('port', port);
 /**
  * Create HTTP server.
  */
-const server = require('../app').server;
+const server = http.createServer(app);
 
 /**
  * Listen on provided port, on all network interfaces.
