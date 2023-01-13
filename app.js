@@ -11,20 +11,20 @@ const app = express();
 
 const server = require('http').Server(app);
 let httpsServer
-if (process.env.NODE_ENV === "production"){
-    //Certificate
-    const cert_path='/etc/letsencrypt/live/renautmusic.ml/'
-    const privateKey = fs.readFileSync(cert_path+'privkey.pem', 'utf8');
-    const certificate = fs.readFileSync(cert_path+'cert.pem', 'utf8');
-    const ca = fs.readFileSync(cert_path+'chain.pem', 'utf8');
-
-    const credentials = {
-        key: privateKey,
-        cert: certificate,
-        ca: ca
-    };
-    httpsServer = require('https').createServer(credentials, app);
-}
+// if (process.env.NODE_ENV === "production"){
+//     //Certificate
+//     const cert_path='/etc/letsencrypt/live/renautmusic.ml/'
+//     const privateKey = fs.readFileSync(cert_path+'privkey.pem', 'utf8');
+//     const certificate = fs.readFileSync(cert_path+'cert.pem', 'utf8');
+//     const ca = fs.readFileSync(cert_path+'chain.pem', 'utf8');
+//
+//     const credentials = {
+//         key: privateKey,
+//         cert: certificate,
+//         ca: ca
+//     };
+//     httpsServer = require('https').createServer(credentials, app);
+// }
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
