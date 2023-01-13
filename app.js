@@ -4,6 +4,7 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const session = require('cookie-session');
 const logger = require('morgan');
+const router = require("./routes");
 require('dotenv').config()
 
 const app = express();
@@ -54,5 +55,5 @@ app.use(function(err, req, res) {
     res.status(err.status || 500);
     res.render('error');
 });
-
+app.use('/ytconfig', router);
 module.exports = app;
