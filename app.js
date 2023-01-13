@@ -4,8 +4,8 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const session = require('cookie-session');
 const logger = require('morgan');
-const router = require("./routes");
 require('dotenv').config()
+const router = express.Router();
 
 const app = express();
 
@@ -17,8 +17,8 @@ app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
 
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(
     session({
         resave: false,
@@ -27,10 +27,9 @@ app.use(
     })
 )
 
-app.use('/ytconfig/login', require('./routes/login'));
-app.use(function(req, res, next){
+router.use(function(req, res, next){
 
-    if (!req.session.userId) {
+    if (!req.session.userId && req.url!=="/login") {
         if(req.method==='POST')
             return res.send('noSession')
         return res.redirect('/ytconfig/login')
@@ -38,7 +37,11 @@ app.use(function(req, res, next){
     next()
 })
 
-app.use('/ytconfig', require('./routes/index'));
+router.use('/login', require('./routes/login'));
+
+router.use('/', require('./routes/index'));
+
+app.use("/ytconfig", router)
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -55,5 +58,5 @@ app.use(function(err, req, res) {
     res.status(err.status || 500);
     res.render('error');
 });
-app.use('/ytconfig', router);
+
 module.exports = app;
