@@ -347,27 +347,25 @@ async function downloadSong(id){
 
     async function process(){
 
-        await axios
-            .get(metadata.thumbnail, {
-                responseType: "text",
-                responseEncoding: "base64",
-            })
-            .then(async (resp) => {
-                const uri = resp.data.split(';base64,').pop()
-                let imgBuffer = Buffer.from(uri, 'base64');
-                await sharp(imgBuffer)
-                    .resize(1080, 1080)
-                    .toFile('tmp/img/' + metadata.id + ".jpg")
-                    .catch(err => console.log(`downisze issue ${err}`))
+        try{
+            await axios
+                .get(metadata.thumbnail, {
+                    responseType: "text",
+                    responseEncoding: "base64",
+                })
+                .then(async (resp) => {
+                    const uri = resp.data.split(';base64,').pop()
+                    let imgBuffer = Buffer.from(uri, 'base64');
+                    await sharp(imgBuffer)
+                        .resize(1080, 1080)
+                        .toFile('tmp/img/' + metadata.id + ".jpg")
+                        .catch(err => console.log(`downisze issue ${err}`))
 
-            })
-
-        if(!fs.existsSync('tmp/img/'+metadata.id+".jpg")){
+                })
+        } catch (e) {
             currentAtSameTime --
             return console.error(getTimeStamp()+"Picture "+metadata.thumbnail+" failed to download")
         }
-
-
 
         //'ffmpeg -i ' + 'tmp/songs/' + metadata.id + 'X.mp3 -id3v2_version 3 ' +
         //             ' -metadata title="' + metadata.track +
