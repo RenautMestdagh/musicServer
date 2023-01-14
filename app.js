@@ -27,19 +27,18 @@ app.use(
     })
 )
 
-router.use(function(req, res, next){
-
+const redirectLogin = (req, res, next) => {
     if (!req.session.userId && req.url!=="/login") {
         if(req.method==='POST')
             return res.send('noSession')
         return res.redirect('/ytconfig/login')
     }
     next()
-})
+}
 
 router.use('/login', require('./routes/login'));
 
-router.use('/', require('./routes/index'));
+router.use('/', redirectLogin, require('./routes/index'));
 
 app.use("/ytconfig", router)
 
