@@ -142,7 +142,7 @@ function submit(){
         el.disabled = true
 
     xhr.onload = function () {
-        console.log(xhr.response)
+        console.log(xhr)
         if(xhr.responseText === "duplicates")
             return invalid()
         else
