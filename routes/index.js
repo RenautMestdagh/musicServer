@@ -11,7 +11,6 @@ const sharp = require('sharp');
 let songs = new Set();
 let ytPlaylists = {};
 let jfPlaylists = {};
-let deleteFromPlaylistQueue = {};   // with jf IDs
 let lib;
 
 const maxAtSameTime = 10
@@ -175,7 +174,6 @@ async function getLinks() {
 
     ytPlaylists = {};
     let songsN = new Set();
-    const tmpLib = lib.slice(0);
 
     for(let el of playlistCollection.playlists) {
         let url = el.ytID
@@ -223,21 +221,9 @@ async function getLinks() {
                         headers: {"Accept-Encoding": "gzip,deflate,br"}
                     }
                 )
-                //deleteFromPlaylistQueue[value.Id] = true
             }
             if(!YTPlaylistsContains(ytPlaylists, ytId) && fs.existsSync(libPath+ytId+".mp3") ) // not in a single playlist
                 fs.unlinkSync(libPath+ytId + ".mp3");
-        }
-
-        // check for songs in jf library without playlist
-        for(const jfSong of jfPlaylists[el.jfID]){
-            // remove entry from tmpLib with Id=jfSong.Id
-            for(const libEntry of tmpLib)
-                if(libEntry.Id === jfSong.Id){
-                    const objWithIdIndex = tmpLib.findIndex((obj) => obj.Id === jfSong.Id);
-                    if (objWithIdIndex > -1)
-                        tmpLib.splice(objWithIdIndex, 1);
-                }
         }
 
     }
@@ -254,6 +240,10 @@ async function getLinks() {
         }
     }
 
+    while(currentAtSameTime !== 0){
+        await new Promise(r => setTimeout(r, 5000)); // 5 seconden wachten voor opnieuw check, wachten tegen alles gedownload is
+    }
+
     // check for songs in jf library which are not in their playlists
     for(const el of Object.keys(ytPlaylists)){
         const jfPlID = playlistCollectionContainsYT(el).jfID
@@ -264,26 +254,13 @@ async function getLinks() {
             for(const el of ytPlaylist){
                 const jfId = ytToJfId(lib, el)
                 if(jfId)
-                    if(!jfLibraryContains(jfPlaylist, jfId)){
+                    if(!jfLibraryContains(jfPlaylist, jfId))
                         await axios.post(
                             jfUrl + "/Playlists/" + jfPlID + "/Items?Ids=" + jfId + "&api_key=" + process.env.JF_API_KEY + "&userId=" + process.env.JF_UID, {
                                 headers: {"Accept-Encoding": "gzip,deflate,compress"}
                             }
                         )
-                        const objWithIdIndex = tmpLib.findIndex((obj) => obj.Id === jfId);
-
-                        if (objWithIdIndex > -1)
-                            tmpLib.splice(objWithIdIndex, 1);
-                    }
             }
-    }
-
-    // in library maar niet meer in een playlist
-    for(const el of tmpLib){
-        try{
-            fs.unlinkSync(libPath+jfToYtId(tmpLib,el.Id) + ".mp3");
-            deleteFromPlaylistQueue[el.Id] = true
-        } catch(e){}
     }
 }
 async function downloadSong(id){
