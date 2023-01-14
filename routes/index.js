@@ -139,7 +139,7 @@ async function executeAll(){
         clearOldTmp().then(async function(){
             getLinks().then(function(){
                 console.log(getTimeStamp()+"----- Execution complete -----")
-                console.log()
+                console.log("|")
                 busy=false
                 if(update)
                     executeAll();
