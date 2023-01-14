@@ -226,6 +226,7 @@ async function getLinks() {
             if(!YTPlaylistsContains(ytPlaylists, ytId) && fs.existsSync(libPath+ytId+".mp3") ){ // not in a single playlist
                 fs.unlinkSync(libPath+ytId + ".mp3");
                 console.log(getTimeStamp()+"Song https://music.youtube.com/watch?v="+ytId+" deleted")
+
             }
 
         }
@@ -464,7 +465,7 @@ function randomIntFromInterval(min, max) { // min and max included
 
 function getTimeStamp(){
     const d = new Date()
-    return "".concat("[",d.getHours().toString(),":",d.getMinutes().toString(),":",d.getSeconds().toString(),"] ")
+    return "".concat("[",d.getHours().toString().padStart(2, '0'),":",d.getMinutes().toString().padStart(2, '0'),":",d.getSeconds().toString().padStart(2, '0'),"] ")
 }
 
 module.exports = router;
