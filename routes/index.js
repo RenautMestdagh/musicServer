@@ -138,7 +138,8 @@ async function executeAll(){
     await getLibrary().then(async function(){
         clearOldTmp().then(async function(){
             getLinks().then(function(){
-                console.log(getTimeStamp()+"----- Execution complete -----\n")
+                console.log(getTimeStamp()+"----- Execution complete -----")
+                console.log()
                 busy=false
                 if(update)
                     executeAll();
