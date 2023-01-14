@@ -103,7 +103,6 @@ router.post('/', function(req, res) {
         }
 
         //delete unused jf playlists
-        const deleted = []
         for(const el of playlistsRef){
             let match = false
             for(const ell of newPlaylists)
@@ -113,7 +112,6 @@ router.post('/', function(req, res) {
                 await axios.delete(
                     jfUrl+"/Items/"+el.jfID+"?api_key="+process.env.JF_API_KEY, {headers: { "Accept-Encoding": "gzip,deflate,compress" }},
                 )
-                deleted.push(el.name)
             }
 
         }
@@ -230,21 +228,6 @@ async function getLinks() {
             if(!YTPlaylistsContains(ytPlaylists, ytId) && fs.existsSync(libPath+ytId+".mp3") ) // not in a single playlist
                 fs.unlinkSync(libPath+ytId + ".mp3");
         }
-        // for(const key of Object.keys(deleteFromPlaylistQueue)){
-        //     if(!jfLibraryContains(lib, key)){    // kunt pas uit playlist verwijderen alst ni meer in JF library zit, lol
-        //         await axios.delete(
-        //             jfUrl+"/Playlists/"+el.jfID+"/Items?EntryIds="+key+"&api_key="+process.env.JF_API_KEY+"&userId="+process.env.JF_UID, {
-        //                 headers: { "Accept-Encoding": "gzip,deflate,br" }
-        //             }
-        //         )
-        //         delete deleteFromPlaylistQueue[key]
-        //     } else {
-        //         const objWithIdIndex = tmpLib.findIndex((obj) => obj.Id === key);
-        //
-        //         if (objWithIdIndex > -1)
-        //             tmpLib.splice(objWithIdIndex, 1);
-        //     }
-        // }
 
         // check for songs in jf library without playlist
         for(const jfSong of jfPlaylists[el.jfID]){
@@ -295,7 +278,7 @@ async function getLinks() {
             }
     }
 
-    // in library maar niet meer in een playlist (nodig voor geval bestaande jf playlist, nieuwe yt playlist) -> oude yt playlist verwijderen
+    // in library maar niet meer in een playlist
     for(const el of tmpLib){
         try{
             fs.unlinkSync(libPath+jfToYtId(tmpLib,el.Id) + ".mp3");
@@ -389,7 +372,7 @@ async function downloadSong(id){
                     .catch(err => console.log(`downisze issue ${err}`))
 
             }).catch(function (error) {
-                console.error(error, error.message)
+                return console.error(error, error.message)
             })
 
         //'ffmpeg -i ' + 'tmp/songs/' + metadata.id + 'X.mp3 -id3v2_version 3 ' +
