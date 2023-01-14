@@ -228,7 +228,7 @@ async function getLinks() {
     for(const file of fs.readdirSync(libPath)) {
         if (!YTPlaylistsContains(ytPlaylists, file.split(".")[0])) {    // song in jf library but not in single playlist (purging)
             fs.unlinkSync(libPath + file);
-            console.log(getTimeStamp()+"Song https://music.youtube.com/watch?v="+ytId+" deleted")
+            console.log(getTimeStamp()+"Song https://music.youtube.com/watch?v="+file.split(".")[0]+" deleted")
         }
     }
 
