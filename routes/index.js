@@ -190,10 +190,15 @@ async function getLinks() {
             if(response.data.nextPageToken!=="A")
                 pageToken = "&pageToken="+response.data.nextPageToken
 
-            response = await axios({
-                method: "get",
-                url: "https://youtube.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50"+pageToken+"&playlistId="+url+"&key="+process.env.YT_API_KEY,
-            })
+            try{
+                response = await axios({
+                    method: "get",
+                    url: "https://youtube.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50"+pageToken+"&playlistId="+url+"&key="+process.env.YT_API_KEY,
+                })
+            } catch(e){
+                return console.error(e)    // wss quota overschreden
+            }
+
 
             for(let el2 of response.data.items){
                 songsN.add(el2.snippet.resourceId.videoId)
