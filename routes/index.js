@@ -338,29 +338,36 @@ async function downloadSong(id){
         output:"tmp/songs/"+id+"X.mp3",
         format: "bestaudio",
     }).then(function(){
+        if(!fs.existsSync('tmp/songs/'+id+"X.mp3")){
+            currentAtSameTime --
+            return console.error(getTimeStamp()+"Song https://youtube.com/watch?v="+id+" failed to download but WEIRD")
+        }
         process()
     })
 
     async function process(){
-        try{
-            await axios
-                .get(metadata.thumbnail, {
-                    responseType: "text",
-                    responseEncoding: "base64",
-                })
-                .then(async (resp) => {
-                    const uri = resp.data.split(';base64,').pop()
-                    let imgBuffer = Buffer.from(uri, 'base64');
-                    await sharp(imgBuffer)
-                        .resize(1080, 1080)
-                        .toFile('tmp/img/' + metadata.id + ".jpg")
-                        .catch(err => console.log(`downisze issue ${err}`))
 
-                })
-        } catch (e){
+        await axios
+            .get(metadata.thumbnail, {
+                responseType: "text",
+                responseEncoding: "base64",
+            })
+            .then(async (resp) => {
+                const uri = resp.data.split(';base64,').pop()
+                let imgBuffer = Buffer.from(uri, 'base64');
+                await sharp(imgBuffer)
+                    .resize(1080, 1080)
+                    .toFile('tmp/img/' + metadata.id + ".jpg")
+                    .catch(err => console.log(`downisze issue ${err}`))
+
+            })
+
+        if(!fs.existsSync('tmp/img/'+metadata.id+".jpg")){
             currentAtSameTime --
             return console.error(getTimeStamp()+"Picture "+metadata.thumbnail+" failed to download")
         }
+
+
 
         //'ffmpeg -i ' + 'tmp/songs/' + metadata.id + 'X.mp3 -id3v2_version 3 ' +
         //             ' -metadata title="' + metadata.track +
