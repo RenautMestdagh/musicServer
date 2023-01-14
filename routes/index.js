@@ -161,13 +161,11 @@ async function getLibrary() {
 }
 
 async function clearOldTmp() {
-    const songs = fs.readdirSync(path.join(__dirname, '../tmp/songs/'))
-    const img = fs.readdirSync(path.join(__dirname, '../tmp/img/'))
 
-    for(const file of songs)
+    for(const file of fs.readdirSync(path.join(__dirname, '../tmp/songs/')))
         fs.unlinkSync(path.join(__dirname, '../tmp/songs/'+file))
 
-    for(const file of img)
+    for(const file of fs.readdirSync(path.join(__dirname, '../tmp/img/')))
         fs.unlinkSync(path.join(__dirname, '../tmp/img/'+file))
 }
 
@@ -204,9 +202,9 @@ async function getLinks() {
     }
     songs = songsN
 
+    //checken als er liedjes in JF playlist zitten die niet in een yt playlist zitten
     for(let el of playlistCollection.playlists) {
 
-        //checken als er liedjes in JF playlist zitten die niet in een yt playlist zitten
         let jfPlaylist = await axios.get(
             jfUrl+"/Playlists/"+el.jfID+"/Items?api_key="+process.env.JF_API_KEY+"&userId="+process.env.JF_UID+"&Fields=Path", {
                 headers: { "Accept-Encoding": "gzip,deflate,compress" }
@@ -224,14 +222,14 @@ async function getLinks() {
                 )
                 console.log(getTimeStamp()+"Song https://music.youtube.com/watch?v="+ytId+" removed from playlist "+el.name)
             }
-            if(!YTPlaylistsContains(ytPlaylists, ytId) && fs.existsSync(libPath+ytId+".mp3") ){ // not in a single playlist
-                fs.unlinkSync(libPath+ytId + ".mp3");
-                console.log(getTimeStamp()+"Song https://music.youtube.com/watch?v="+ytId+" deleted")
-
-            }
-
         }
+    }
 
+    for(const file of fs.readdirSync(libPath)) {
+        if (!YTPlaylistsContains(ytPlaylists, file.split(".")[0])) {    // song in jf library but not in single playlist (purging)
+            fs.unlinkSync(libPath + file);
+            console.log(getTimeStamp()+"Song https://music.youtube.com/watch?v="+ytId+" deleted")
+        }
     }
 
     // download songs which are not in media folder
