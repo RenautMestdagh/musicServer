@@ -132,13 +132,13 @@ router.post('/', function(req, res) {
 });
 
 async function executeAll(){
-    console.log("EXECUTION LOOP STARTED: "+ new Date() )
+    console.log(getTimeStamp()+"----- Execution started -----")
     busy=true
     update=false
     await getLibrary().then(async function(){
         clearOldTmp().then(async function(){
             getLinks().then(function(){
-                console.log("EXECUTION LOOP COMPLETE: "+ new Date() )
+                console.log(getTimeStamp()+"----- Execution complete -----")
                 busy=false
                 if(update)
                     executeAll();
@@ -199,7 +199,7 @@ async function getLinks() {
                 ytPlaylists[url].add(el2.snippet.resourceId.videoId);
             }
         }
-        console.log("YouTube playlist \""+el.name+"\" contains "+ytPlaylists[url].size+" items")
+        console.log(getTimeStamp()+"YouTube playlist \""+el.name+"\" contains "+ytPlaylists[url].size+" items")
     }
     songs = songsN
 
@@ -221,9 +221,13 @@ async function getLinks() {
                         headers: {"Accept-Encoding": "gzip,deflate,br"}
                     }
                 )
+                console.log(getTimeStamp()+"Song https://music.youtube.com/watch?v="+ytId+" removed from playlist "+el.name)
             }
-            if(!YTPlaylistsContains(ytPlaylists, ytId) && fs.existsSync(libPath+ytId+".mp3") ) // not in a single playlist
+            if(!YTPlaylistsContains(ytPlaylists, ytId) && fs.existsSync(libPath+ytId+".mp3") ){ // not in a single playlist
                 fs.unlinkSync(libPath+ytId + ".mp3");
+                console.log(getTimeStamp()+"Song https://music.youtube.com/watch?v="+ytId+" deleted")
+            }
+
         }
 
     }
@@ -235,7 +239,7 @@ async function getLinks() {
                 await new Promise(r => setTimeout(r, randomIntFromInterval(5000, 10000))); // 10 seconden wachten voor opnieuw check
             }
             currentAtSameTime ++
-            console.log("Currently downloading: "+ytId)
+            console.log(getTimeStamp()+"Start download song https://music.youtube.com/watch?v="+ytId)
             downloadSong(ytId)
         }
     }
@@ -246,7 +250,8 @@ async function getLinks() {
 
     // check for songs in jf library which are not in their playlists
     for(const el of Object.keys(ytPlaylists)){
-        const jfPlID = playlistCollectionContainsYT(el).jfID
+        const playlistObject = playlistCollectionContainsYT(el)
+        const jfPlID = playlistObject.jfID
         const ytPlaylist = ytPlaylists[el]
         const jfPlaylist = jfPlaylists[jfPlID]
 
@@ -254,12 +259,15 @@ async function getLinks() {
             for(const el of ytPlaylist){
                 const jfId = ytToJfId(lib, el)
                 if(jfId)
-                    if(!jfLibraryContains(jfPlaylist, jfId))
+                    if(!jfLibraryContains(jfPlaylist, jfId)){
                         await axios.post(
                             jfUrl + "/Playlists/" + jfPlID + "/Items?Ids=" + jfId + "&api_key=" + process.env.JF_API_KEY + "&userId=" + process.env.JF_UID, {
                                 headers: {"Accept-Encoding": "gzip,deflate,compress"}
                             }
                         )
+                        console.log(getTimeStamp()+"Song https://music.youtube.com/watch?v="+el+" added to playlist "+playlistObject.name)
+                    }
+
             }
     }
 }
@@ -278,7 +286,7 @@ async function downloadSong(id){
             ]
         })
     } catch (e) {
-        console.log("VIDEO "+id+" FAILED TO DOWNLOAD")
+        console.error(getTimeStamp()+"Song https://youtube.com/watch?v="+id+" failed to download")
         // console.log(e)
         // use proxy 194.78.203.207:8111
         // try{
@@ -349,7 +357,8 @@ async function downloadSong(id){
                     .catch(err => console.log(`downisze issue ${err}`))
 
             }).catch(function (error) {
-                return console.error(error, error.message)
+                return console.error(getTimeStamp()+"Picture "+metadata.thumbnail+" failed to download")
+                //return console.error(error, error.message)
             })
 
         //'ffmpeg -i ' + 'tmp/songs/' + metadata.id + 'X.mp3 -id3v2_version 3 ' +
@@ -374,7 +383,7 @@ async function downloadSong(id){
         try{
             execSync(toExecute, {encoding: 'utf-8'});
         } catch(e) {
-            console.log(e)
+            console.error(e)
             return
         }
 
@@ -386,6 +395,8 @@ async function downloadSong(id){
 
         fs.unlinkSync('tmp/songs/' + metadata.id + '.mp3')
         fs.unlinkSync('tmp/img/' + metadata.id + '.jpg')
+
+        console.log(getTimeStamp()+"Song https://music.youtube.com/watch?v="+metadata.id+" downloaded")
         currentAtSameTime --
     }
 }
@@ -449,6 +460,11 @@ function playlistCollectionContainsName(plName){
 
 function randomIntFromInterval(min, max) { // min and max included
     return Math.floor(Math.random() * (max - min + 1) + min)
+}
+
+function getTimeStamp(){
+    const d = new Date()
+    return "".concat("[",d.getHours().toString(),":",d.getMinutes().toString(),":",d.getSeconds().toString(),"] ")
 }
 
 module.exports = router;
