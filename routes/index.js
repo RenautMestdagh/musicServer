@@ -12,6 +12,7 @@ let songs = new Set();
 let ytPlaylists = {};
 let jfPlaylists = {};
 let lib;
+let nextExecute
 
 const maxAtSameTime = 10
 let currentAtSameTime = 0
@@ -132,6 +133,8 @@ router.post('/', function(req, res) {
 });
 
 async function executeAll(){
+    clearTimeout(nextExecute);
+
     console.log(getTimeStamp()+"----- Execution started -----")
     busy=true
     update=false
@@ -141,9 +144,9 @@ async function executeAll(){
                 console.log(getTimeStamp()+"----- Execution complete -----")
                 console.log("|")
                 busy=false
+                nextExecute = setTimeout(executeAll, 600000)
                 if(update)
                     executeAll();
-                setTimeout(executeAll, 600000)
             })
         })   // om de 10 minuten alles uitvoeren)))
     })
