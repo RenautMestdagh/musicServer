@@ -446,7 +446,7 @@ async function connectVPN(){
         });
         tryNr++
         if(tryNr>5)
-            return throw new Error('Unable to connect to vpn');
+            throw new Error('Unable to connect to vpn');
     }
     return vpnProcess
 }
