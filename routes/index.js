@@ -315,7 +315,7 @@ async function downloadSong(id){
                 noCheckCertificates: true,
                 noWarnings: true,
                 preferFreeFormats: true,
-                proxy: "https://78.20.209.210/",
+                proxy: "https://44.144.125.1:8080/",
                 geoBypass: true,
                 geoBypassCountry: "BE",
                 addHeader: [
@@ -328,7 +328,7 @@ async function downloadSong(id){
                 noCheckCertificates: true,
                 noWarnings: true,
                 preferFreeFormats: true,
-                proxy: "https://78.20.209.210/",
+                proxy: "https://44.144.125.1:8080/",
                 addHeader: [
                     'referer:youtube.com',
                     'user-agent:googlebot'
