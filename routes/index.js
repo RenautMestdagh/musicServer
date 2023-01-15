@@ -310,38 +310,55 @@ async function downloadSong(id){
         console.log(getTimeStamp()+"Using proxy for https://music.youtube.com/watch?v="+id)
 
         try{
-            metadata = await youtubedl("https://music.youtube.com/watch?v="+id, {
-                dumpSingleJson: true,
-                noCheckCertificates: true,
-                noWarnings: true,
-                preferFreeFormats: true,
-                proxy: "https://44.144.125.1:8080/",
-                geoBypass: true,
-                geoBypassCountry: "BE",
-                addHeader: [
-                    'referer:youtube.com',
-                    'user-agent:googlebot'
-                ]
-            })
 
-            await youtubedl("https://music.youtube.com/watch?v="+id, {
-                noCheckCertificates: true,
-                noWarnings: true,
-                preferFreeFormats: true,
-                proxy: "https://44.144.125.1:8080/",
-                addHeader: [
-                    'referer:youtube.com',
-                    'user-agent:googlebot'
-                ],
-                output:"tmp/songs/"+id+"X.mp3",
-                format: "bestaudio",
-            }).then(function(){
-                if(!fs.existsSync('tmp/songs/'+id+"X.mp3")){
-                    console.error(getTimeStamp()+"Song https://youtube.com/watch?v="+id+" failed to download with proxy but WEIRD")
-                    return currentAtSameTime--
-                }
-                process()
-            })
+            const openVPN = require('openvpn-client');
+
+            // Establish VPN connection
+            const options = {
+                host: 'be.lazerpenguin.com',
+                port: 443,
+                username: 'renaut.mestdagh@hotmail.com',
+                password: '!RerM9cx56tt@f6u',
+                config: path.join(__dirname, '../TunnelBear_Belgium.ovpn')
+            };
+
+            const client = openVPN.connect(options);
+
+            // Send request through VPN connection
+            client.on('connected', async function() {
+
+                metadata = await youtubedl("https://music.youtube.com/watch?v="+id, {
+                    dumpSingleJson: true,
+                    noCheckCertificates: true,
+                    noWarnings: true,
+                    preferFreeFormats: true,
+                    proxy: "http://be.lazerpenguin.com:443",
+                    addHeader: [
+                        'referer:youtube.com',
+                        'user-agent:googlebot'
+                    ]
+                })
+
+                await youtubedl("https://music.youtube.com/watch?v="+id, {
+                    noCheckCertificates: true,
+                    noWarnings: true,
+                    preferFreeFormats: true,
+                    proxy: "http://be.lazerpenguin.com:443",
+                    addHeader: [
+                        'referer:youtube.com',
+                        'user-agent:googlebot'
+                    ],
+                    output:"tmp/songs/"+id+"X.mp3",
+                    format: "bestaudio",
+                }).then(function(){
+                    if(!fs.existsSync('tmp/songs/'+id+"X.mp3")){
+                        console.error(getTimeStamp()+"Song https://youtube.com/watch?v="+id+" failed to download with proxy but WEIRD")
+                        return currentAtSameTime--
+                    }
+                    process()
+                })
+
+            });
 
         } catch (e) {
             console.error(getTimeStamp()+"Song https://youtube.com/watch?v="+id+" failed to download with proxy")

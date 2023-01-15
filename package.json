@@ -17,6 +17,7 @@
     "http-errors": "~1.6.3",
     "morgan": "~1.9.1",
     "nvm": "^0.0.4",
+    "openvpn-client": "^0.0.2",
     "pug": "2.0.0-beta11",
     "sharp": "^0.31.3",
     "youtube-dl-exec": "^2.1.10"
