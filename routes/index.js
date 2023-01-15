@@ -289,8 +289,9 @@ async function downloadSong(id){
     } catch (e) {
         // console.log(e)
         // use proxy 194.78.203.207:8111
-        console.log(getTimeStamp()+"Using proxy 194.78.203.207 for https://music.youtube.com/watch?v="+id)
+        console.log(getTimeStamp()+"Using proxy for https://music.youtube.com/watch?v="+id)
         try{
+            console.log(1)
             metadata = await youtubedl("https://music.youtube.com/watch?v="+id, {
                 dumpSingleJson: true,
                 noCheckCertificates: true,
@@ -304,6 +305,7 @@ async function downloadSong(id){
                     'user-agent:googlebot'
                 ]
             })
+            console.log(2)
             await youtubedl("https://music.youtube.com/watch?v="+id, {
                 noCheckCertificates: true,
                 noWarnings: true,
