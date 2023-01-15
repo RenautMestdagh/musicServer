@@ -4,14 +4,17 @@ const path = require("path");
 const fs = require("fs");
 const axios = require('axios');
 const youtubedl = require('youtube-dl-exec');
-
+require('node-openvpn');
 const {execSync} = require("child_process");
+const cp = require("child_process");
+const { spawn } = require('child_process');
 const sharp = require('sharp');
 
 let ytPlaylists = {};
 let jfPlaylists = {};
 let lib;
 let nextExecute
+let vpnQueue
 
 const maxAtSameTime = 10
 let currentAtSameTime = 0
@@ -176,6 +179,7 @@ async function getLinks() {
 
     ytPlaylists = {};
     const songs = new Set();
+    vpnQueue = new Set();
 
     for(let el of playlistCollection.playlists) {
         let url = el.ytID
@@ -242,13 +246,43 @@ async function getLinks() {
             }
             currentAtSameTime ++
             console.log(getTimeStamp()+"Start download song https://music.youtube.com/watch?v="+ytId)
-            downloadSong(ytId)
+            downloadSong(ytId, false)
         }
     }
 
     while(currentAtSameTime !== 0){
         await new Promise(r => setTimeout(r, 5000)); // 5 seconden wachten voor opnieuw check, wachten tegen alles gedownload is
     }
+
+    if(vpnQueue.size>0){
+
+        let vpnProcess
+        try{
+            vpnProcess = await connectVPN()
+        } catch (e) {
+            console.error(getTimeStamp()+"Failed to connect to VPN")
+        }
+
+        if(vpnProcess){
+            for(const ytId of vpnQueue){
+                if(!fs.existsSync('tmp/songs/'+ytId+".mp3") && !fs.existsSync(libPath+ytId+".mp3")){
+                    while(currentAtSameTime >= maxAtSameTime){
+                        await new Promise(r => setTimeout(r, randomIntFromInterval(5000, 10000))); // 10 seconden wachten voor opnieuw check
+                    }
+                    currentAtSameTime ++
+                    console.log(getTimeStamp()+"Start download song https://music.youtube.com/watch?v="+ytId+" with vpn")
+                    downloadSong(ytId, true)
+                }
+            }
+
+            while(currentAtSameTime !== 0){
+                await new Promise(r => setTimeout(r, 5000)); // 5 seconden wachten voor opnieuw check, wachten tegen alles me vpn gedownload is
+            }
+            //vpnProcess.destroy()
+        }
+
+    }
+
 
     // check for songs in jf library which are not in their playlists
     for(const el of Object.keys(ytPlaylists)){
@@ -272,9 +306,18 @@ async function getLinks() {
             }
     }
 }
-async function downloadSong(id){
+
+async function downloadSong(id, vpn){
+
+    let logging
+    if(vpn)
+        logging = "with vpn "
+    else
+        logging = "without vpn"
+
 
     let metadata
+
     try{
         metadata = await youtubedl("https://music.youtube.com/watch?v="+id, {
             dumpSingleJson: true,
@@ -299,73 +342,17 @@ async function downloadSong(id){
             format: "bestaudio",
         }).then(function(){
             if(!fs.existsSync('tmp/songs/'+id+"X.mp3")){
-                console.error(getTimeStamp()+"Song https://youtube.com/watch?v="+id+" failed to download but WEIRD")
+                console.error(getTimeStamp()+"Song https://youtube.com/watch?v="+id+" failed to download "+logging+"but WEIRD")
                 return currentAtSameTime--
             }
             process()
         })
 
     } catch (e) {
-        // use proxy 194.78.203.207:8111
-        console.log(getTimeStamp()+"Using proxy for https://music.youtube.com/watch?v="+id)
-
-        try{
-
-            const openVPN = require('openvpn-client');
-
-            // Establish VPN connection
-            const options = {
-                host: 'be.lazerpenguin.com',
-                port: 443,
-                timeout:15000,
-                config: path.join(__dirname, '../vpn/TunnelBear_Belgium.ovpn')
-            };
-
-            const client = openVPN.connect(options);
-
-            // Send request through VPN connection
-            client.on('connected', async function() {
-                console.log(client)
-                metadata = await youtubedl("https://music.youtube.com/watch?v="+id, {
-                    dumpSingleJson: true,
-                    noCheckCertificates: true,
-                    noWarnings: true,
-                    preferFreeFormats: true,
-                    proxy: "http://be.lazerpenguin.com:443",
-                    addHeader: [
-                        'referer:youtube.com',
-                        'user-agent:googlebot'
-                    ]
-                })
-
-                await youtubedl("https://music.youtube.com/watch?v="+id, {
-                    noCheckCertificates: true,
-                    noWarnings: true,
-                    preferFreeFormats: true,
-                    proxy: "http://be.lazerpenguin.com:443",
-                    addHeader: [
-                        'referer:youtube.com',
-                        'user-agent:googlebot'
-                    ],
-                    output:"tmp/songs/"+id+"X.mp3",
-                    format: "bestaudio",
-                }).then(async function(){
-                    await client.disconnect();
-                    if(!fs.existsSync('tmp/songs/'+id+"X.mp3")){
-                        console.error(getTimeStamp()+"Song https://youtube.com/watch?v="+id+" failed to download with proxy but WEIRD")
-                        return currentAtSameTime--
-                    }
-                    process()
-                })
-
-            });
-
-        } catch (e) {
-            console.error(getTimeStamp()+"Song https://youtube.com/watch?v="+id+" failed to download with proxy")
-            return currentAtSameTime--
-        }
-        // console.error(getTimeStamp()+"Song https://youtube.com/watch?v="+id+" failed to download")
-        // return currentAtSameTime--
+        console.error(getTimeStamp()+"Song https://youtube.com/watch?v="+id+" failed to download "+logging)
+        if(!vpn)
+            vpnQueue.add(id)
+        return currentAtSameTime --
     }
 
     async function process(){
@@ -436,6 +423,32 @@ async function downloadSong(id){
         console.log(getTimeStamp()+"Song https://music.youtube.com/watch?v="+metadata.id+" downloaded")
         currentAtSameTime--
     }
+}
+
+async function connectVPN(){
+
+
+    const vpnProcess = spawn('/bin/sh', ['-c', 'sudo openvpn --config vpn/TunnelBear_Belgium.ovpn'], { shell: true });
+
+    let prev
+    let currIp
+
+    await cp.exec('curl ifconfig.me', function(err, stdout) {
+        prev=stdout
+        currIp=stdout
+    });
+
+    let tryNr=0
+    while(prev===currIp){    // wachten tegen da vpn verbonden is
+        await new Promise(r => setTimeout(r, 5000));
+        await cp.exec('curl ifconfig.me', function(err, stdout) {
+            currIp=stdout
+        });
+        tryNr++
+        if(tryNr>5)
+            return throw new Error('Unable to connect to vpn');
+    }
+    return vpnProcess
 }
 
 function sameConfig(ell){
