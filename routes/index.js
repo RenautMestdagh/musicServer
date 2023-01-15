@@ -278,7 +278,7 @@ async function getLinks() {
             while(currentAtSameTime !== 0){
                 await new Promise(r => setTimeout(r, 5000)); // 5 seconden wachten voor opnieuw check, wachten tegen alles me vpn gedownload is
             }
-            //vpnProcess.destroy()
+            vpnProcess.kill()
         }
 
     }
