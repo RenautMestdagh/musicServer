@@ -254,6 +254,10 @@ async function getLinks() {
         await new Promise(r => setTimeout(r, 5000)); // 5 seconden wachten voor opnieuw check, wachten tegen alles gedownload is
     }
 
+    await cp.exec('curl ifconfig.me', function(err, stdout) {
+        console.log(getTimeStamp()+stdout)
+    });
+
     if(vpnQueue.size>0){
 
         let vpnProcess
@@ -264,6 +268,10 @@ async function getLinks() {
         } catch (e) {
             console.error(getTimeStamp()+"Failed to connect to VPN")
         }
+
+        await cp.exec('curl ifconfig.me', function(err, stdout) {
+            console.log(getTimeStamp()+stdout+" vpn")
+        });
 
         if(vpnProcess){
             for(const ytId of vpnQueue){
