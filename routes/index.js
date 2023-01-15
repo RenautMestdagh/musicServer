@@ -8,7 +8,6 @@ const youtubedl = require('youtube-dl-exec');
 const {execSync} = require("child_process");
 const sharp = require('sharp');
 
-let songs = new Set();
 let ytPlaylists = {};
 let jfPlaylists = {};
 let lib;
@@ -116,6 +115,7 @@ router.post('/', function(req, res) {
 
         }
 
+        // sort alphabetically by name
         newPlaylists.sort( function( a, b ) {
             a = a.name.toLowerCase();
             b = b.name.toLowerCase();
@@ -144,11 +144,11 @@ async function executeAll(){
                 console.log(getTimeStamp()+"----- Execution complete -----")
                 console.log("|")
                 busy=false
-                nextExecute = setTimeout(executeAll, 600000)
+                nextExecute = setTimeout(executeAll, 600000)    // om de 10 minuten alles uitvoeren
                 if(update)
                     executeAll();
             })
-        })   // om de 10 minuten alles uitvoeren)))
+        })
     })
 }
 executeAll();
@@ -175,21 +175,15 @@ async function clearOldTmp() {
 async function getLinks() {
 
     ytPlaylists = {};
-    let songsN = new Set();
+    const songs = new Set();
 
     for(let el of playlistCollection.playlists) {
         let url = el.ytID
         ytPlaylists[url] = new Set()
-        let response = {}
-        response.data  ={};
-        response.data.nextPageToken = "A"
+        let response
+        let pageToken = ""
 
-        while(response.data.nextPageToken !== undefined){
-
-            let pageToken =""
-            if(response.data.nextPageToken!=="A")
-                pageToken = "&pageToken="+response.data.nextPageToken
-
+        do {
             try{
                 response = await axios({
                     method: "get",
@@ -198,17 +192,17 @@ async function getLinks() {
             } catch(e){
                 return console.error(e)    // wss quota overschreden
             }
+            pageToken = "&pageToken="+response.data.nextPageToken
 
 
             for(let el2 of response.data.items){
-                songsN.add(el2.snippet.resourceId.videoId)
-                //songsN[el2.snippet.resourceId.videoId].yt1=el2
+                songs.add(el2.snippet.resourceId.videoId)
                 ytPlaylists[url].add(el2.snippet.resourceId.videoId);
             }
-        }
+        }  while(response.data.nextPageToken !== undefined)
+
         console.log(getTimeStamp()+"YouTube playlist \""+el.name+"\" contains "+ytPlaylists[url].size+" items")
     }
-    songs = songsN
 
     //checken als er liedjes in JF playlist zitten die niet in een yt playlist zitten
     for(let el of playlistCollection.playlists) {
@@ -275,7 +269,6 @@ async function getLinks() {
                         )
                         console.log(getTimeStamp()+"Song https://music.youtube.com/watch?v="+el+" added to playlist "+playlistObject.name)
                     }
-
             }
     }
 }
@@ -296,42 +289,38 @@ async function downloadSong(id){
     } catch (e) {
         // console.log(e)
         // use proxy 194.78.203.207:8111
-        // try{
-        //     metadata = await youtubedl("https://music.youtube.com/watch?v="+id, {
-        //         dumpSingleJson: true,
-        //         noCheckCertificates: true,
-        //         noWarnings: true,
-        //         preferFreeFormats: true,
-        //         geoVerificationProxy: "socks5://194.78.203.207:8111/",
-        //         geoBypass: true,
-        //         geoBypassCountry: "BE",
-        //         addHeader: [
-        //             'referer:youtube.com',
-        //             'user-agent:googlebot'
-        //         ]
-        //     })
-        //     await youtubedl("https://music.youtube.com/watch?v="+id, {
-        //         noCheckCertificates: true,
-        //         noWarnings: true,
-        //         preferFreeFormats: true,
-        //         geoVerificationProxy: "socks5://194.78.203.207:8111/",
-        //         geoBypass: true,
-        //         geoBypassCountry: "BE",
-        //         addHeader: [
-        //             'referer:youtube.com',
-        //             'user-agent:googlebot'
-        //         ],
-        //         output:"tmp/songs/"+id+"X.mp3",
-        //         format: "bestaudio",
-        //     }).then(process())
-        // } catch (e) {
-        //     currentAtSameTime --
-        //     console.log("PROXY FAILED")
-        //     console.log(e)
-        //     return
-        // }
-        currentAtSameTime --
-        return console.error(getTimeStamp()+"Song https://youtube.com/watch?v="+id+" failed to download")
+        try{
+            metadata = await youtubedl("https://music.youtube.com/watch?v="+id, {
+                dumpSingleJson: true,
+                noCheckCertificates: true,
+                noWarnings: true,
+                preferFreeFormats: true,
+                proxy: "socks5://194.78.203.207:8111/",
+                geoBypass: true,
+                geoBypassCountry: "BE",
+                addHeader: [
+                    'referer:youtube.com',
+                    'user-agent:googlebot'
+                ]
+            })
+            await youtubedl("https://music.youtube.com/watch?v="+id, {
+                noCheckCertificates: true,
+                noWarnings: true,
+                preferFreeFormats: true,
+                proxy: "socks5://194.78.203.207:8111/",
+                addHeader: [
+                    'referer:youtube.com',
+                    'user-agent:googlebot'
+                ],
+                output:"tmp/songs/"+id+"X.mp3",
+                format: "bestaudio",
+            }).then(process())
+        } catch (e) {
+            console.error(getTimeStamp()+"Song https://youtube.com/watch?v="+id+" failed to download with proxy")
+            return currentAtSameTime--
+        }
+        console.error(getTimeStamp()+"Song https://youtube.com/watch?v="+id+" failed to download")
+        return currentAtSameTime--
     }
 
 
@@ -347,8 +336,8 @@ async function downloadSong(id){
         format: "bestaudio",
     }).then(function(){
         if(!fs.existsSync('tmp/songs/'+id+"X.mp3")){
-            currentAtSameTime --
-            return console.error(getTimeStamp()+"Song https://youtube.com/watch?v="+id+" failed to download but WEIRD")
+            console.error(getTimeStamp()+"Song https://youtube.com/watch?v="+id+" failed to download but WEIRD")
+            return currentAtSameTime--
         }
         process()
     })
@@ -376,8 +365,8 @@ async function downloadSong(id){
                 break
             } catch (e) {
                 if (++count === maxTries) {
-                    currentAtSameTime --
-                    return console.error(getTimeStamp()+"Picture "+metadata.thumbnail+" failed to download")
+                    console.error(getTimeStamp()+"Picture "+metadata.thumbnail+" failed to download")
+                    return currentAtSameTime--
                 }
             }
         }
@@ -406,7 +395,7 @@ async function downloadSong(id){
             execSync(toExecute, {encoding: 'utf-8'});
         } catch(e) {
             console.error(e)
-            return
+            return currentAtSameTime--
         }
 
 
@@ -419,7 +408,7 @@ async function downloadSong(id){
         fs.unlinkSync('tmp/img/' + metadata.id + '.jpg')
 
         console.log(getTimeStamp()+"Song https://music.youtube.com/watch?v="+metadata.id+" downloaded")
-        currentAtSameTime --
+        currentAtSameTime--
     }
 }
 
