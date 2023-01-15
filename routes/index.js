@@ -259,6 +259,7 @@ async function getLinks() {
         let vpnProcess
         try{
             vpnProcess = await connectVPN()
+            console.log(getTimeStamp()+'Vpn connected')
         } catch (e) {
             console.error(getTimeStamp()+"Failed to connect to VPN")
         }
@@ -279,6 +280,7 @@ async function getLinks() {
                 await new Promise(r => setTimeout(r, 5000)); // 5 seconden wachten voor opnieuw check, wachten tegen alles me vpn gedownload is
             }
             vpnProcess.kill()
+            console.log(getTimeStamp()+'Vpn disconnected')
         }
 
     }
@@ -411,7 +413,6 @@ async function downloadSong(id, vpn){
             return currentAtSameTime--
         }
 
-
         fs.unlinkSync('tmp/songs/' + metadata.id + 'X.mp3')
 
         execSync('ffmpeg -hide_banner -loglevel error -i tmp/songs/' + id + ".mp3"+' -i tmp/img/' + id + ".jpg -map 0:0 -map 1:0 -c copy -id3v2_version 3 " +
@@ -427,7 +428,7 @@ async function downloadSong(id, vpn){
 
 async function connectVPN(){
 
-    const vpnProcess = spawn('/bin/sh', ['-c', 'sudo openvpn --config vpn/TunnelBear_Belgium.ovpn'], { shell: true });
+    const vpnProcess = spawn('/bin/sh', ['./vpn/connect.sh'], { shell: true });
 
     let prev
     let currIp
