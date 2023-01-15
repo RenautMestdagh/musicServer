@@ -427,8 +427,7 @@ async function downloadSong(id, vpn){
 
 async function connectVPN(){
 
-
-    const vpnProcess = spawn('/bin/sh', ['-c', 'sudo openvpn --config vpn/TunnelBear_Belgium.ovpn'], { shell: true });
+    const vpnProcess = spawn('/bin/sh', ['-c', './vpn/connect.sh'], { shell: true });
 
     let prev
     let currIp
@@ -447,6 +446,7 @@ async function connectVPN(){
         tryNr++
         if(tryNr>5)
             throw new Error('Unable to connect to vpn');
+
     }
     return vpnProcess
 }

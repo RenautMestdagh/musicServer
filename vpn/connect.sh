@@ -1,0 +1,1 @@
+sudo openvpn --config vpn/TunnelBear_Belgium.ovpn
