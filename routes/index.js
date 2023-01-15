@@ -154,7 +154,7 @@ async function executeAll(){
         })
     })
 }
-executeAll();
+setTimeout(executeAll, 120000)
 
 async function getLibrary() {
 
@@ -176,6 +176,10 @@ async function clearOldTmp() {
 }
 
 async function getLinks() {
+
+    await cp.exec('curl ifconfig.me', async function(err, stdout) {
+        await console.log(getTimeStamp()+"ip: "+stdout)
+    });
 
     ytPlaylists = {};
     const songs = new Set();
@@ -254,10 +258,6 @@ async function getLinks() {
         await new Promise(r => setTimeout(r, 5000)); // 5 seconden wachten voor opnieuw check, wachten tegen alles gedownload is
     }
 
-    await cp.exec('curl ifconfig.me', function(err, stdout) {
-        console.log(getTimeStamp()+stdout)
-    });
-
     if(vpnQueue.size>0){
 
         let vpnProcess
@@ -269,8 +269,8 @@ async function getLinks() {
             console.error(getTimeStamp()+"Failed to connect to VPN")
         }
 
-        await cp.exec('curl ifconfig.me', function(err, stdout) {
-            console.log(getTimeStamp()+stdout+" vpn")
+        await cp.exec('curl ifconfig.me', async function(err, stdout) {
+            await console.log(getTimeStamp()+"vpn ip: "+stdout)
         });
 
         if(vpnProcess){
