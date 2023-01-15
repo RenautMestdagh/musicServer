@@ -286,18 +286,36 @@ async function downloadSong(id){
                 'user-agent:googlebot'
             ]
         })
+
+        await youtubedl("https://music.youtube.com/watch?v="+id, {
+            noCheckCertificates: true,
+            noWarnings: true,
+            preferFreeFormats: true,
+            addHeader: [
+                'referer:youtube.com',
+                'user-agent:googlebot'
+            ],
+            output:"tmp/songs/"+id+"X.mp3",
+            format: "bestaudio",
+        }).then(function(){
+            if(!fs.existsSync('tmp/songs/'+id+"X.mp3")){
+                console.error(getTimeStamp()+"Song https://youtube.com/watch?v="+id+" failed to download but WEIRD")
+                return currentAtSameTime--
+            }
+            process()
+        })
+
     } catch (e) {
-        // console.log(e)
         // use proxy 194.78.203.207:8111
         console.log(getTimeStamp()+"Using proxy for https://music.youtube.com/watch?v="+id)
+
         try{
-            console.log(1)
             metadata = await youtubedl("https://music.youtube.com/watch?v="+id, {
                 dumpSingleJson: true,
                 noCheckCertificates: true,
                 noWarnings: true,
                 preferFreeFormats: true,
-                proxy: "socks4://81.83.1.89:4153/",
+                proxy: "https://78.20.209.210/",
                 geoBypass: true,
                 geoBypassCountry: "BE",
                 addHeader: [
@@ -305,19 +323,26 @@ async function downloadSong(id){
                     'user-agent:googlebot'
                 ]
             })
-            console.log(2)
+
             await youtubedl("https://music.youtube.com/watch?v="+id, {
                 noCheckCertificates: true,
                 noWarnings: true,
                 preferFreeFormats: true,
-                proxy: "socks4://81.83.1.89:4153/",
+                proxy: "https://78.20.209.210/",
                 addHeader: [
                     'referer:youtube.com',
                     'user-agent:googlebot'
                 ],
                 output:"tmp/songs/"+id+"X.mp3",
                 format: "bestaudio",
-            }).then(process())
+            }).then(function(){
+                if(!fs.existsSync('tmp/songs/'+id+"X.mp3")){
+                    console.error(getTimeStamp()+"Song https://youtube.com/watch?v="+id+" failed to download with proxy but WEIRD")
+                    return currentAtSameTime--
+                }
+                process()
+            })
+
         } catch (e) {
             console.error(getTimeStamp()+"Song https://youtube.com/watch?v="+id+" failed to download with proxy")
             return currentAtSameTime--
@@ -325,25 +350,6 @@ async function downloadSong(id){
         // console.error(getTimeStamp()+"Song https://youtube.com/watch?v="+id+" failed to download")
         // return currentAtSameTime--
     }
-
-
-    await youtubedl("https://music.youtube.com/watch?v="+id, {
-        noCheckCertificates: true,
-        noWarnings: true,
-        preferFreeFormats: true,
-        addHeader: [
-            'referer:youtube.com',
-            'user-agent:googlebot'
-        ],
-        output:"tmp/songs/"+id+"X.mp3",
-        format: "bestaudio",
-    }).then(function(){
-        if(!fs.existsSync('tmp/songs/'+id+"X.mp3")){
-            console.error(getTimeStamp()+"Song https://youtube.com/watch?v="+id+" failed to download but WEIRD")
-            return currentAtSameTime--
-        }
-        process()
-    })
 
     async function process(){
 
