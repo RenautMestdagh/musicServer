@@ -326,7 +326,7 @@ async function downloadSong(id){
 
             // Send request through VPN connection
             client.on('connected', async function() {
-
+                console.log(client)
                 metadata = await youtubedl("https://music.youtube.com/watch?v="+id, {
                     dumpSingleJson: true,
                     noCheckCertificates: true,
