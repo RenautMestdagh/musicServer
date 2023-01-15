@@ -289,6 +289,7 @@ async function downloadSong(id){
     } catch (e) {
         // console.log(e)
         // use proxy 194.78.203.207:8111
+        console.log(getTimeStamp()+"Using proxy 194.78.203.207 for https://music.youtube.com/watch?v="+id)
         try{
             metadata = await youtubedl("https://music.youtube.com/watch?v="+id, {
                 dumpSingleJson: true,
@@ -319,8 +320,8 @@ async function downloadSong(id){
             console.error(getTimeStamp()+"Song https://youtube.com/watch?v="+id+" failed to download with proxy")
             return currentAtSameTime--
         }
-        console.error(getTimeStamp()+"Song https://youtube.com/watch?v="+id+" failed to download")
-        return currentAtSameTime--
+        // console.error(getTimeStamp()+"Song https://youtube.com/watch?v="+id+" failed to download")
+        // return currentAtSameTime--
     }
 
 
