@@ -427,7 +427,7 @@ async function downloadSong(id, vpn){
 
 async function connectVPN(){
 
-    const vpnProcess = spawn('/bin/sh', ['-c', './vpn/connect.sh'], { shell: true });
+    const vpnProcess = spawn('/bin/sh', ['-c', 'sudo openvpn --config vpn/TunnelBear_Belgium.ovpn'], { shell: true });
 
     let prev
     let currIp
