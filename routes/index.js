@@ -258,6 +258,7 @@ async function getLinks() {
 
         let vpnProcess
         try{
+            console.log(getTimeStamp()+'Connecting to vpn')
             vpnProcess = await connectVPN()
             console.log(getTimeStamp()+'Vpn connected')
         } catch (e) {
