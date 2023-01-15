@@ -20,7 +20,6 @@ let update = false
 let toExecute = false
 
 let playlistCollection = require('../playlists.json');
-const openvpnmanager = require("node-openvpn");
 
 let ffmpegPath
 let libPath
@@ -312,27 +311,22 @@ async function downloadSong(id){
 
         try{
 
+            const openVPN = require('openvpn-client');
+
             // Establish VPN connection
-            const opts = {
+            const options = {
                 host: 'be.lazerpenguin.com',
                 port: 443,
                 timeout:15000,
-                logpath: 'log.txt'
-            };
-            const auth = {
-                user: 'renaut.mestdagh@hotmail.com',
-                pass: '!RerM9cx56tt@f6u',
+                config: path.join(__dirname, '../vpn/TunnelBear_Belgium.ovpn')
             };
 
-            const openvpn  = openvpnmanager.connect(opts);
-            openvpn.on('disconnected', () => {
-                // finally destroy the disconnected manager
-                openvpnmanager.destroy()
-            });
-            openvpn.on('connected', async () => {
-                await openvpnmanager.authorize(auth);
+            const client = openVPN.connect(options);
 
-                metadata = await youtubedl("https://music.youtube.com/watch?v=" + id, {
+            // Send request through VPN connection
+            client.on('connected', async function() {
+                console.log(client)
+                metadata = await youtubedl("https://music.youtube.com/watch?v="+id, {
                     dumpSingleJson: true,
                     noCheckCertificates: true,
                     noWarnings: true,
@@ -344,7 +338,7 @@ async function downloadSong(id){
                     ]
                 })
 
-                await youtubedl("https://music.youtube.com/watch?v=" + id, {
+                await youtubedl("https://music.youtube.com/watch?v="+id, {
                     noCheckCertificates: true,
                     noWarnings: true,
                     preferFreeFormats: true,
@@ -353,15 +347,14 @@ async function downloadSong(id){
                         'referer:youtube.com',
                         'user-agent:googlebot'
                     ],
-                    output: "tmp/songs/" + id + "X.mp3",
+                    output:"tmp/songs/"+id+"X.mp3",
                     format: "bestaudio",
-                }).then(function () {
-                    if (!fs.existsSync('tmp/songs/' + id + "X.mp3")) {
-                        console.error(getTimeStamp() + "Song https://youtube.com/watch?v=" + id + " failed to download with proxy but WEIRD")
+                }).then(async function(){
+                    await client.disconnect();
+                    if(!fs.existsSync('tmp/songs/'+id+"X.mp3")){
+                        console.error(getTimeStamp()+"Song https://youtube.com/watch?v="+id+" failed to download with proxy but WEIRD")
                         return currentAtSameTime--
                     }
-                    openvpnmanager.disconnect();
-
                     process()
                 })
 
