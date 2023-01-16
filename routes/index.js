@@ -177,10 +177,6 @@ async function clearOldTmp() {
 
 async function getLinks() {
 
-    await cp.exec('curl ifconfig.me', async function(err, stdout) {
-        await console.log(getTimeStamp()+"ip: "+stdout)
-    });
-
     ytPlaylists = {};
     const songs = new Set();
     vpnQueue = new Set();
@@ -250,7 +246,7 @@ async function getLinks() {
             }
             currentAtSameTime ++
             console.log(getTimeStamp()+"Start download song https://music.youtube.com/watch?v="+ytId)
-            downloadSong(ytId, false)
+            downloadSong(ytId)//, false)
         }
     }
 
@@ -258,41 +254,41 @@ async function getLinks() {
         await new Promise(r => setTimeout(r, 5000)); // 5 seconden wachten voor opnieuw check, wachten tegen alles gedownload is
     }
 
-    if(vpnQueue.size>0){
-
-        let vpnProcess
-        try{
-            console.log(getTimeStamp()+'Connecting to vpn')
-            vpnProcess = await connectVPN()
-            console.log(getTimeStamp()+'Vpn connected')
-        } catch (e) {
-            console.error(getTimeStamp()+"Failed to connect to VPN")
-        }
-
-        await cp.exec('curl ifconfig.me', async function(err, stdout) {
-            await console.log(getTimeStamp()+"vpn ip: "+stdout)
-        });
-
-        if(vpnProcess){
-            for(const ytId of vpnQueue){
-                if(!fs.existsSync('tmp/songs/'+ytId+".mp3") && !fs.existsSync(libPath+ytId+".mp3")){
-                    while(currentAtSameTime >= maxAtSameTime){
-                        await new Promise(r => setTimeout(r, randomIntFromInterval(5000, 10000))); // 10 seconden wachten voor opnieuw check
-                    }
-                    currentAtSameTime ++
-                    console.log(getTimeStamp()+"Start download song https://music.youtube.com/watch?v="+ytId+" with vpn")
-                    downloadSong(ytId, true)
-                }
-            }
-
-            while(currentAtSameTime !== 0){
-                await new Promise(r => setTimeout(r, 5000)); // 5 seconden wachten voor opnieuw check, wachten tegen alles me vpn gedownload is
-            }
-            vpnProcess.kill()
-            console.log(getTimeStamp()+'Vpn disconnected')
-        }
-
-    }
+    // if(vpnQueue.size>0){
+    //
+    //     let vpnProcess
+    //     try{
+    //         console.log(getTimeStamp()+'Connecting to vpn')
+    //         vpnProcess = await connectVPN()
+    //         console.log(getTimeStamp()+'Vpn connected')
+    //     } catch (e) {
+    //         console.error(getTimeStamp()+"Failed to connect to VPN")
+    //     }
+    //
+    //     await cp.exec('curl ifconfig.me', async function(err, stdout) {
+    //         await console.log(getTimeStamp()+"vpn ip: "+stdout)
+    //     });
+    //
+    //     if(vpnProcess){
+    //         for(const ytId of vpnQueue){
+    //             if(!fs.existsSync('tmp/songs/'+ytId+".mp3") && !fs.existsSync(libPath+ytId+".mp3")){
+    //                 while(currentAtSameTime >= maxAtSameTime){
+    //                     await new Promise(r => setTimeout(r, randomIntFromInterval(5000, 10000))); // 10 seconden wachten voor opnieuw check
+    //                 }
+    //                 currentAtSameTime ++
+    //                 console.log(getTimeStamp()+"Start download song https://music.youtube.com/watch?v="+ytId+" with vpn")
+    //                 downloadSong(ytId, true)
+    //             }
+    //         }
+    //
+    //         while(currentAtSameTime !== 0){
+    //             await new Promise(r => setTimeout(r, 5000)); // 5 seconden wachten voor opnieuw check, wachten tegen alles me vpn gedownload is
+    //         }
+    //         vpnProcess.kill()
+    //         console.log(getTimeStamp()+'Vpn disconnected')
+    //     }
+    //
+    // }
 
 
     // check for songs in jf library which are not in their playlists
@@ -318,14 +314,13 @@ async function getLinks() {
     }
 }
 
-async function downloadSong(id, vpn){
+async function downloadSong(id){//, vpn){
 
-    let logging
-    if(vpn)
-        logging = "with vpn "
-    else
-        logging = "without vpn"
-
+    let logging=""
+    // if(vpn)
+    //     logging = "with vpn "
+    // else
+    //     logging = "without vpn"
 
     let metadata
 
@@ -338,7 +333,8 @@ async function downloadSong(id, vpn){
             addHeader: [
                 'referer:youtube.com',
                 'user-agent:googlebot'
-            ]
+            ],
+            //proxy: 'https://renaut.mestdagh%40gmail.com:q8Cz%267jEm5%23yuz7L@be.lazerpenguin.com:443'
         })
 
         await youtubedl("https://music.youtube.com/watch?v="+id, {
@@ -351,6 +347,7 @@ async function downloadSong(id, vpn){
             ],
             output:"tmp/songs/"+id+"X.mp3",
             format: "bestaudio",
+            //proxy: 'https://renaut.mestdagh%40gmail.com:q8Cz%267jEm5%23yuz7L@be.lazerpenguin.com:443'
         }).then(function(){
             if(!fs.existsSync('tmp/songs/'+id+"X.mp3")){
                 console.error(getTimeStamp()+"Song https://youtube.com/watch?v="+id+" failed to download "+logging+"but WEIRD")
@@ -360,9 +357,10 @@ async function downloadSong(id, vpn){
         })
 
     } catch (e) {
+        // console.error(e)
         console.error(getTimeStamp()+"Song https://youtube.com/watch?v="+id+" failed to download "+logging)
-        if(!vpn)
-            vpnQueue.add(id)
+        //if(!vpn)
+          //  vpnQueue.add(id)
         return currentAtSameTime --
     }
 
